@@ -17,7 +17,8 @@ df_scheiding = df_scheiding_unfiltered[["uuid", "Plaats echtscheiding", "Datum e
 df_overlijden = df_overlijden_unfiltered[["uuid", "Overledene-Voornaam", "Overledene-Tussenvoegsel", "Overledene-Geslachtsnaam", "Overledene-Leeftijd", "Overledene-Beroep", "Overledene-Datum overlijden", "Overledene-Plaats overlijden", "Overledene-Plaats geboorte", "Overledene-Plaats wonen", "Relatie-Voornaam", "Relatie-Tussenvoegsel", "Relatie-Geslachtsnaam", "Relatie-Relatietype", "Relatie-Leeftijd", "Relatie-Beroep", "Relatie-Datum overlijden", "Relatie-Plaats overlijden", "Relatie-Plaats geboorte", "Relatie-Plaats wonen", "Vader-Voornaam", "Vader-Tussenvoegsel", "Vader-Geslachtsnaam", "Vader-Leeftijd", "Vader-Beroep", "Vader-Datum overlijden", "Vader-Plaats overlijden", "Vader-Plaats geboorte", "Vader-Plaats wonen", "Moeder-Voornaam", "Moeder-Tussenvoegsel", "Moeder-Geslachtsnaam", "Moeder-Leeftijd", "Moeder-Beroep", "Moeder-Datum overlijden", "Moeder-Plaats overlijden", "Moeder-Plaats geboorte", "Moeder-Plaats wonen"]]
 print(f"Completed in {round(time() - start, 2)}s\n")
 
-# print(df_scheiding)
 # print(df_geboorte)
 # print(df_huwelijk)
+# print(df_scheiding)
 # print(df_overlijden)
+
