@@ -52,3 +52,6 @@ https://www.nber.org/system/files/working_papers/w24324/w24324.pdf
 
 https://ranabr.people.stanford.edu/historical-record-linking
 
+Aspects of Record Linkage, Marijn Schraagen, Leiden University
+
+https://scholarlypublications.universiteitleiden.nl/access/item%3A2936304/view
