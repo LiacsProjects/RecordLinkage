@@ -52,25 +52,20 @@ https://www.nber.org/system/files/working_papers/w24324/w24324.pdf
 
 https://ranabr.people.stanford.edu/historical-record-linking
 
-Aspects of Record Linkage, Marijn Schraagen, Leiden University
+
+## Aspects of Record Linkage, Marijn Schraagen, Leiden University ##
 
 https://scholarlypublications.universiteitleiden.nl/access/item%3A2936304/view
 
 
-(Distance algorithms)
+## Distance algorithms ##
+
 https://github.com/mkusner/wmd
 
 https://github.com/dbblumenthal/gedlib
 
 
-(Name variants)
+## Name variants ##
+
 https://github.com/mmmenno/linked-elo
 
-
-(Link)
-
-https://github.com/knaw-huc/lenticular-lens
-
-https://github.com/knaw-huc/Lenticular-Lenses-Gui-GA
-
-https://github.com/CLARIAH/burgerLinker
