@@ -38,6 +38,8 @@ During this research, you will
 
 https://www.leonvanwissen.nl/publication/idrissouetal-2022-graphum/idrissouetal-2022-graphum.pdf
 
+https://lenticularlens.org/docs/01.Introduction/
+
 https://github.com/knaw-huc/lenticular-lens
 
 https://github.com/knaw-huc/Lenticular-Lenses-Gui-GA
