@@ -1,49 +1,33 @@
-# https://stackoverflow.com/questions/57512155/how-to-draw-a-tree-more-beautifully-in-networkx
-
 import matplotlib.pyplot as plt
 import networkx as nx
-import pydot
 import csv
+import os
 from networkx.drawing.nx_pydot import graphviz_layout
 import pandas as pd
 
-# G = nx.Graph()
-# # G.add_node("dad")
 
-# # G.add_edge("mom", "dad")
-# # G.add_edge("mom", "mom2")
-
-# pos = graphviz_layout(G, prog="dot")
-# nx.draw(G, pos)
-# plt.show()
+FORMAT = "svg"
+DPI = 300
 
 
-def read_matches():
-    df_matches = pd.read_csv("matches.csv", sep=";")
-    id_map = pd.read_csv("registrations.csv", sep=";")
-
-    matches = []
-    for row in df_matches.itertuples():
-        id_certificate_parents = id_map.loc[id_map['id_registration'] == row.id_certificate_parents].iloc[0]['registration_seq']
-        id_certificate_partners = id_map.loc[id_map['id_registration'] == row.id_certificate_partners].iloc[0]['registration_seq']
-
-        # print(id_certificate_parents, id_certificate_partners)
-        matches.append([id_certificate_parents, id_certificate_partners])
-        # break
-    
-    df_clean_matches = pd.DataFrame(matches, columns=["parents_id", "partners_id"])
-    df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    # return matches
+def unique_file_name(path, extension = ""):
+    i = 0
+    temp_path = path
+    while os.path.exists(temp_path + "." + extension):  #check of het bestand al bestaat
+        i += 1
+        temp_path = path + " ({})".format(str(i))
+    return temp_path + "." + extension
 
 
-
-
-def get_family():
+def get_tree():
     df_matches = pd.read_csv("clean matches.csv", sep=";")
     # df_marriage = pd.read_csv(r'data\processed\huwelijk.csv', dtype="string")
-    
+
+    G = nx.Graph()
+
+
     def find_recursive_child(match, depth):
-        children = df_matches.loc[df_matches["parents_id"] == match.partners_id]
+        children = df_matches.loc[df_matches["partners_id"] == match.parents_id]
         if len(children) > 0:
             depths = []
             childs = []
@@ -57,32 +41,82 @@ def get_family():
             return match, depth
 
 
-    # G = nx.Graph()
-    max_depth = 0
+    def find_recursive_parents(cert):
+        parents = df_matches.loc[df_matches["parents_id"] == cert]
+
+        for parent in parents.itertuples():
+
+            G.add_node(parent.partners_id)
+            G.add_edge(cert, parent.partners_id)
+
+            # marriage = df_marriage.loc[df_marriage['uuid'] == parent.partners_id].iloc[0]
+
+            # persons = []
+            # for type in ["Bruidegom", "Bruid", "Vader bruidegom", "Moeder bruidegom", "Vader bruid", "Moeder bruid"]:
+            #     name = " ". join([str(marriage[f"{type}-Voornaam"]).replace("<NA>", ""), str(marriage[f"{type}-Tussenvoegsel"]).replace("<NA>", ""), str(marriage[f"{type}-Geslachtsnaam"]).replace("<NA>", "")])
+            #     persons.append([name, type])
+
+            find_recursive_parents(parent.partners_id)
+
+
+    print("Constructing graph")
     for match in df_matches.itertuples():
-        # marriage_parents = df_marriage.loc[df_marriage['uuid'] == match.parents_id].iloc[0] 
-        # marriage_partners = df_marriage.loc[df_marriage['uuid'] == match.partners_id].iloc[0]
-        print(match)
+        G.add_node(match.partners_id)
+        G.add_node(match.parents_id)
+        G.add_edge(match.parents_id, match.partners_id)
 
-        old = find_recursive_child(match, 0)
-        # match 
-        print(old)
+        youngest = find_recursive_child(match, 0)
 
+        G.add_node(youngest[0].parents_id)
 
-        # for match in df_matches.loc[df_matches["parents_id"] == match.partners_id].itertuples():
-        #     for 
+        find_recursive_parents(youngest[0].parents_id)
 
-
-        # print(marriage_parents, "\n", marriage_partners)
         break
+    
+    print("Generating positions")
 
+    pos = graphviz_layout(G, prog="twopi")
     # pos = graphviz_layout(G, prog="dot")
-    # nx.draw(G, pos)
-    # plt.show()
+    # pos = nx.spring_layout(G)
+    
+    print("Drawing graph")
+    nx.draw(G, pos)
+
+    file = unique_file_name("trees\\Partial tree", FORMAT)
+    print(f"Saving \"{file}\"\n")
+    plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
-# read_matches()
-# print("read matches")
+def get_tree_all():
+    df_matches = pd.read_csv("clean matches.csv", sep=";")
 
-get_family()
+    fig = plt.figure(figsize=(40,40))
+    G = nx.Graph()
+
+    print("Constructing graph")
+    for match in df_matches.itertuples():
+
+        G.add_node(match.partners_id)
+        G.add_node(match.parents_id)
+        G.add_edge(match.parents_id, match.partners_id)
+
+        if G.number_of_nodes() > 10000:
+            break
+    
+    print("Generating positions")
+
+    pos = graphviz_layout(G, prog="twopi")
+    # pos = graphviz_layout(G, prog="dot")
+    # pos = nx.spring_layout(G)
+    
+    print("Drawing graph")
+    nx.draw(G, pos, node_size=50)
+    # nx.drawing.nx_pydot.write_dot(G,path)
+    file = unique_file_name("trees\\Complete tree", FORMAT)
+    print(f"Saving \"{file}\"\n")
+    fig.savefig(file, format=FORMAT, dpi=DPI)
+
+
+# get_tree()
+get_tree_all()
 

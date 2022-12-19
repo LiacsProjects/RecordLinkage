@@ -24,9 +24,11 @@ def generate_processed_data():
         "Getuige-Plaats geboorte", "Getuige-Plaats wonen", "Getuige-Datum geboorte", "Getuige-Geslacht", "Getuige-Beroep", 
         "Getuige-Leeftijd"]]
 
-    df_huwelijk = df_huwelijk_unfiltered[["uuid", "Plaats huwelijk", "Datum", "Jaar", "Bruidegom-Voornaam", 
+    df_huwelijk = df_huwelijk_unfiltered[["uuid", "Plaats huwelijk", "Datum", "Jaar", 
+        "Bruidegom-Voornaam", 
         "Bruidegom-Tussenvoegsel", "Bruidegom-Geslachtsnaam", "Bruidegom-Leeftijd", "Bruidegom-Beroep", 
-        "Bruidegom-Plaats geboorte", "Bruidegom-Datum geboorte", "Bruidegom-Plaats wonen", "Vader bruidegom-Voornaam", 
+        "Bruidegom-Plaats geboorte", "Bruidegom-Datum geboorte", "Bruidegom-Plaats wonen", 
+        "Vader bruidegom-Voornaam", 
         "Vader bruidegom-Tussenvoegsel", "Vader bruidegom-Geslachtsnaam", "Vader bruidegom-Leeftijd", "Vader bruidegom-Beroep", 
         "Vader bruidegom-Plaats geboorte", "Vader bruidegom-Datum geboorte", "Vader bruidegom-Plaats wonen", 
         "Moeder bruidegom-Voornaam", "Moeder bruidegom-Tussenvoegsel", "Moeder bruidegom-Geslachtsnaam", 
