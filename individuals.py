@@ -3,24 +3,34 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import pydot
+import Levenshtein
 import csv
 import os
 from networkx.drawing.nx_pydot import graphviz_layout
 import pandas as pd
 
-# G = nx.Graph()
-# G.add_node("dad")
-# G.add_node("dad")
 
-# # G.add_edge("mom", "dad")
-# # G.add_edge("mom", "mom2")
+INDEX_GROOM = 30
+INDEX_GROOM_FATHER = 48
+INDEX_GROOM_MOTHER = 66
+INDEX_BRIDE = 84
+INDEX_BRIDE_FATHER = 102
+INDEX_BRIDE_MOTHER = 120
 
-# pos = graphviz_layout(G, prog="dot")
-# nx.draw(G, pos)
-# plt.show()
+FORMAT = "svg"
+DPI = 300
 
 
-def read_matches():
+def unique_file_name(path, extension = ""):
+    i = 0
+    temp_path = path
+    while os.path.exists(temp_path + "." + extension):  #check of het bestand al bestaat
+        i += 1
+        temp_path = path + " ({})".format(str(i))
+    return temp_path + "." + extension
+
+
+def match_certificates():
     df_matches = pd.read_csv("matches.csv", sep=";")
     id_map = pd.read_csv("registrations.csv", sep=";")
 
@@ -37,28 +47,232 @@ def read_matches():
     df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
+def clean(value):
+    return str(value).replace("<NA>", "").strip()
+
+
 def generate_persons():
+
+    def get_date(date:str):
+
+        def keep_numeric(text):
+            return int("".join([ch for ch in text if ch.isnumeric()]))
+
+        try:
+            date_list = date.split("-")
+            if date[2] == "-":
+                index_day, index_month, index_year = 0, 1, 2
+            else:
+                index_day, index_month, index_year = 2, 1, 0
+
+            return keep_numeric(date_list[index_day]), keep_numeric(date_list[index_month]), keep_numeric(date_list[index_year])
+
+        except Exception as e:
+            # print(e, "date")
+            return 0, 0, 0
+
+
+    def get_age(age_raw:str):
+        try:
+            age = ''
+            for ch in age_raw:
+                if ch.isnumeric():  
+                    age += ch
+
+            if len(age) > 0:
+                return int(age)
+            else:
+                return 0
+        except Exception as e:
+            # print(e, "age")
+            return 0
+
+
+    def get_index(role):
+        if role == "Bruidegom":
+            return INDEX_GROOM
+        if role == "Vader bruidegom":
+            return INDEX_GROOM_FATHER
+        if role == "Moeder bruidegom":
+            return INDEX_GROOM_MOTHER
+        if role == "Bruid":
+            return INDEX_BRIDE
+        if role == "Vader bruid":
+            return INDEX_BRIDE_FATHER
+        if role == "Moeder bruid":
+            return INDEX_BRIDE_MOTHER
+    
+
     df_marriage_unfiltered = pd.read_csv(r'data\unprocessed\Huwelijk.csv', sep=";", dtype="string")
     persons = []
-    count = 0
+    marriages = []
+    person_id = 0
 
-    for marriage in df_marriage_unfiltered.itertuples():
-        for type in ["Bruidegom", "Bruid", "Vader bruidegom", "Moeder bruidegom", "Vader bruid", "Moeder bruid"]:
+    for marriage_unfiltered in df_marriage_unfiltered.itertuples():
+        day, month, year = get_date(marriage_unfiltered[27])
+
+        marriage = [
+            marriage_unfiltered[0],                     # id
+            marriage_unfiltered[1],                     # uuid
+            day, month, year,                           # Date
+            marriage_unfiltered[INDEX_GROOM],           # Bruidegom uuid
+            marriage_unfiltered[INDEX_GROOM_FATHER],    # Vader bruidegom uuid
+            marriage_unfiltered[INDEX_GROOM_MOTHER],    # Moeder bruidegom uuid
+            marriage_unfiltered[INDEX_BRIDE],           # Bruid uuid
+            marriage_unfiltered[INDEX_BRIDE_FATHER],    # Vader bruid uuid
+            marriage_unfiltered[INDEX_BRIDE_MOTHER]]    # Moeder bruid uuid
+
+        marriages.append(marriage)
+    
+        for role in ["Bruidegom", "Vader bruidegom", "Moeder bruidegom", "Bruid", "Vader bruid", "Moeder bruid"]:
+            index = get_index(role)
+            birth_day, birth_month, birth_year = get_date(clean(marriage_unfiltered[index + 15]))
+
             person = [
-                count, 
-                f"{type}-uuid",
-                type, 
-                f"{type}-Voornaam", 
-                f"{type}-Tussenvoegsel", 
-                f"{type}-Geslachtsnaam", 
-                f"{type}-Leeftijd", 
-                f"{type}-Beroep", 
-                f"{type}-Plaats geboorte", 
-                f"{type}-Datum geboorte", 
-                f"{type}-Plaats wonen"]
-
+                person_id,                                          # id
+                marriage_unfiltered[index],                         # uuid
+                role,                                               # Role
+                clean(marriage_unfiltered[index + 9]),              # Voornaam
+                clean(marriage_unfiltered[index + 10]),             # Tussenvoegsel
+                clean(marriage_unfiltered[index + 11]),             # Geslachtsnaam
+                get_age(clean(marriage_unfiltered[index + 12])),    # Age
+                clean(marriage_unfiltered[index + 13]),             # Beroep
+                clean(marriage_unfiltered[index + 14]),             # Geboorte plaats
+                birth_day, birth_month, birth_year,                 # Geboorte datum
+                clean(marriage_unfiltered[index + 16])]             # Woonplaats
+            
             persons.append(person)
-            count += 1
+            person_id += 1
+
+
+    df_marriage = pd.DataFrame(marriages, columns=[
+        "id", 
+        "uuid", 
+        "dag", 
+        "maand", 
+        "jaar", 
+        "bruidegom_uuid", 
+        "vader_bruidegom_uuid", 
+        "moeder_bruidegom_uuid", 
+        "bruid_uuid", 
+        "vader_bruid_uuid", 
+        "moeder_bruid_uuid"])
+
+    df_persons = pd.DataFrame(persons, columns=[
+        "id", 
+        "uuid", 
+        "rol", 
+        "voornaam", 
+        "tussenvoegsel", 
+        "geslachtsnaam", 
+        "leeftijd", 
+        "beroep", 
+        "geboorteplaats", 
+        "dag",
+        "maand", 
+        "jaar", 
+        "woonplaats"])
+
+    df_marriage.to_csv("marriages.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv("persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+def construct_person_links():
+    df_marriages = pd.read_csv("marriages.csv", sep=";", dtype="string")
+    df_persons = pd.read_csv("persons.csv", sep=";", dtype="string")
+    df_matches = pd.read_csv("clean matches.csv", sep=";")
+    G = nx.Graph()
+
+    def get_name(uuid, role):
+        person = df_persons.loc[(df_persons["uuid"] == uuid) & (df_persons["rol"] == role)].iloc[0]
+        name = " ".join(" ".join([clean(person["voornaam"]), clean(person["tussenvoegsel"]), clean(person["geslachtsnaam"])]).split())
+        print(name, role)
+        return name
+        # print("len", len(person))
+ 
+    # double = df_persons.pivot_table(index=['uuid', "rol"], aggfunc='size')
+    # print(len(double), len(df_persons))
+
+    # print("unique", df_persons["uuid"].is_unique)
+
+    links = []
+    for match in df_matches.itertuples():
+        ids = []
+
+        marriage_parents = df_marriages.loc[df_marriages["uuid"] == match[1]].iloc[0]
+        marriage_partners = df_marriages.loc[df_marriages["uuid"] == match[2]].iloc[0]
+
+        parents = [marriage_parents["vader_bruidegom_uuid"], marriage_parents["moeder_bruidegom_uuid"], marriage_parents["vader_bruid_uuid"], marriage_parents["moeder_bruid_uuid"]]
+        partners = [marriage_partners["bruidegom_uuid"], marriage_partners["bruid_uuid"]]
+
+        partners_string = get_name(partners[0], "Bruidegom") + " " + get_name(partners[1], "Bruid")
+        groom_parents_string = get_name(parents[0], "Vader bruidegom") + " " + get_name(parents[1], "Moeder bruidegom")
+        bride_parents_string = get_name(parents[2], "Vader bruid") + " " + get_name(parents[3], "Moeder bruid")
+
+        print()
+        print()
+
+        if Levenshtein.distance(partners_string, groom_parents_string) < Levenshtein.distance(partners_string, bride_parents_string):
+            links.append([parents[0], partners[0] , "m"])
+            links.append([parents[1], partners[1], "v"])
+        else:
+            links.append([parents[2], partners[0], "m"])
+            links.append([parents[3], partners[1], "v"])
+
+        print(links)
+        # for partner in partners:
+        #     get_name(partner)
+        #     break
+
+        # for certificate in match[1:]:
+        #     marriage = df_marriages.loc[df_marriages["uuid"] == str(certificate)].iloc[0]
+        #     ids.append(list(marriage[5:]))
+
+
+        #     links.append([
+        #         [marriage["vader_bruidegom_uuid"], marriage["bruidegom_uuid"], "vader"],
+        #         [marriage["moeder_bruidegom_uuid"], marriage["bruidegom_uuid"], "moeder"],
+        #         # [marriage["bruidegom_uuid"], marriage["bruid_uuid"], "partner"],
+        #         [marriage["vader_bruid_uuid"], marriage["bruid_uuid"], "vader"],
+        #         [marriage["moeder_bruid_uuid"], marriage["bruid_uuid"], "moeder"],
+        #     ])
+
+            # G.add_edge(marriage["vader_bruidegom_uuid"], marriage["bruidegom_uuid"])
+            # G.add_edge(marriage["moeder_bruidegom_uuid"], marriage["bruidegom_uuid"])
+            # G.add_edge(marriage["vader_bruid_uuid"], marriage["bruid_uuid"])
+            # G.add_edge(marriage["moeder_bruid_uuid"], marriage["bruid_uuid"])
+
+            # G.add_edge(marriage["bruidegom_uuid"], "testkind")
+            # G.add_edge(marriage["bruid_uuid"], "testkind")
+
+
+            # break
+            # links.append([])
+
+        # parent -> 
+        # print(ids)
+        # for id in ids:
+
+
+
+        # pos = graphviz_layout(G, prog="dot")
+        # nx.draw(G, pos, node_size=50)
+
+        # file = unique_file_name("test trees\\Test tree", FORMAT)
+        # print(f"Saving \"{file}\"\n")
+        # plt.savefig(file, format=FORMAT, dpi=DPI)
+
+        break
+
+
+    
+
+
+
+construct_person_links()
+
+
+
 
 
 
@@ -76,25 +290,25 @@ def test():
         "Moeder bruid-uuid", "Moeder bruid-Voornaam", "Moeder bruid-Tussenvoegsel", "Moeder bruid-Geslachtsnaam"]]
 
 
-    for match in df_matches.itertuples():
+    # for match in df_matches.itertuples():
 
-        for type in
-
-
+    #     for type in
 
 
-        marriage = df_marriage.loc[df_marriage['uuid'] == parent.partners_id].iloc[0]
 
-        persons = []
-        for type in ["Bruidegom", "Bruid", "Vader bruidegom", "Moeder bruidegom", "Vader bruid", "Moeder bruid"]:
+
+    #     marriage = df_marriage.loc[df_marriage['uuid'] == parent.partners_id].iloc[0]
+
+    #     persons = []
+    #     for type in ["Bruidegom", "Bruid", "Vader bruidegom", "Moeder bruidegom", "Vader bruid", "Moeder bruid"]:
 
             
 
 
 
 
-            name = " ". join([str(marriage[f"{type}-Voornaam"]).replace("<NA>", ""), str(marriage[f"{type}-Tussenvoegsel"]).replace("<NA>", ""), str(marriage[f"{type}-Geslachtsnaam"]).replace("<NA>", "")])
-            persons.append([name, type])
+    #         name = " ". join([str(marriage[f"{type}-Voornaam"]).replace("<NA>", ""), str(marriage[f"{type}-Tussenvoegsel"]).replace("<NA>", ""), str(marriage[f"{type}-Geslachtsnaam"]).replace("<NA>", "")])
+    #         persons.append([name, type])
 
 
 
@@ -275,7 +489,7 @@ def get_family():
     fig.savefig(file, format=format, dpi=dpi)
 
 
-get_family()
+# get_family()
 
 
 

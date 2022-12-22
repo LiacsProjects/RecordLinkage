@@ -21,9 +21,9 @@ def unique_file_name(path, extension = ""):
 
 def get_tree():
     df_matches = pd.read_csv("clean matches.csv", sep=";")
-    # df_marriage = pd.read_csv(r'data\processed\huwelijk.csv', dtype="string")
 
-    G = nx.Graph()
+    checked_certificates = []
+    family_graph_max = nx.Graph()
 
 
     def find_recursive_child(match, depth):
@@ -45,49 +45,50 @@ def get_tree():
         parents = df_matches.loc[df_matches["parents_id"] == cert]
 
         for parent in parents.itertuples():
-
-            G.add_node(parent.partners_id)
-            G.add_edge(cert, parent.partners_id)
-
-            # marriage = df_marriage.loc[df_marriage['uuid'] == parent.partners_id].iloc[0]
-
-            # persons = []
-            # for type in ["Bruidegom", "Bruid", "Vader bruidegom", "Moeder bruidegom", "Vader bruid", "Moeder bruid"]:
-            #     name = " ". join([str(marriage[f"{type}-Voornaam"]).replace("<NA>", ""), str(marriage[f"{type}-Tussenvoegsel"]).replace("<NA>", ""), str(marriage[f"{type}-Geslachtsnaam"]).replace("<NA>", "")])
-            #     persons.append([name, type])
+            checked_certificates.append(parent.partners_id)
+            family_graph.add_node(parent.partners_id)
+            family_graph.add_edge(cert, parent.partners_id)
 
             find_recursive_parents(parent.partners_id)
 
 
     print("Constructing graph")
     for match in df_matches.itertuples():
-        G.add_node(match.partners_id)
-        G.add_node(match.parents_id)
-        G.add_edge(match.parents_id, match.partners_id)
+        if match[0] == 10000:
+            print(match[0])
+            break
+
+        if match.parents_id in checked_certificates:
+            continue
+
+        family_graph = nx.Graph()
 
         youngest = find_recursive_child(match, 0)
 
-        G.add_node(youngest[0].parents_id)
+        checked_certificates.append(youngest[0].parents_id)
+        family_graph.add_node(youngest[0].parents_id)
 
         find_recursive_parents(youngest[0].parents_id)
 
-        break
+        if family_graph.number_of_nodes() > family_graph_max.number_of_nodes():
+            family_graph_max = family_graph
+        # break
     
     print("Generating positions")
 
-    pos = graphviz_layout(G, prog="twopi")
-    # pos = graphviz_layout(G, prog="dot")
+    # pos = graphviz_layout(G, prog="twopi")
+    pos = graphviz_layout(family_graph_max, prog="dot")
     # pos = nx.spring_layout(G)
     
     print("Drawing graph")
-    nx.draw(G, pos)
+    nx.draw(family_graph_max, pos)
 
     file = unique_file_name("trees\\Partial tree", FORMAT)
     print(f"Saving \"{file}\"\n")
     plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
-def get_tree_all():
+def get_tree_all(layout, size):
     df_matches = pd.read_csv("clean matches.csv", sep=";")
 
     fig = plt.figure(figsize=(40,40))
@@ -100,23 +101,29 @@ def get_tree_all():
         G.add_node(match.parents_id)
         G.add_edge(match.parents_id, match.partners_id)
 
-        if G.number_of_nodes() > 10000:
+        if G.number_of_nodes() > size:
             break
     
     print("Generating positions")
-
-    pos = graphviz_layout(G, prog="twopi")
-    # pos = graphviz_layout(G, prog="dot")
-    # pos = nx.spring_layout(G)
+    if layout == "spring":
+        pos = nx.spring_layout(G)
+    else:
+        pos = graphviz_layout(G, prog=layout)
     
     print("Drawing graph")
     nx.draw(G, pos, node_size=50)
     # nx.drawing.nx_pydot.write_dot(G,path)
-    file = unique_file_name("trees\\Complete tree", FORMAT)
+    file = unique_file_name(f"trees\\Complete tree {layout} {str(size)}", FORMAT)
     print(f"Saving \"{file}\"\n")
     fig.savefig(file, format=FORMAT, dpi=DPI)
 
 
 # get_tree()
-get_tree_all()
+
+layout = "twopi"
+# layout = "dot"
+# layout = "neato"
+# layout = "spring"
+size = 30000
+get_tree_all(layout, size)
 
