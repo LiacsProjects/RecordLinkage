@@ -5,7 +5,6 @@ import os
 from networkx.drawing.nx_pydot import graphviz_layout
 import pandas as pd
 
-
 FORMAT = "svg"
 DPI = 300
 
