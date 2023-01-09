@@ -184,10 +184,15 @@ def construct_person_links():
     G = nx.Graph()
 
     def get_name(uuid, role):
-        person = df_persons.loc[(df_persons["uuid"] == uuid) & (df_persons["rol"] == role)].iloc[0]
-        name = " ".join(" ".join([clean(person["voornaam"]), clean(person["tussenvoegsel"]), clean(person["geslachtsnaam"])]).split())
-        print(name, role)
-        return name
+        try:
+            person = df_persons.loc[(df_persons["uuid"] == uuid) & (df_persons["rol"] == role)].iloc[0]
+            name = " ".join(" ".join([clean(person["voornaam"]), clean(person["tussenvoegsel"]), clean(person["geslachtsnaam"])]).split())
+            # print(name, role)
+            return name
+        except:
+
+            return ''
+        
         # print("len", len(person))
  
     # double = df_persons.pivot_table(index=['uuid', "rol"], aggfunc='size')
@@ -209,8 +214,8 @@ def construct_person_links():
         groom_parents_string = get_name(parents[0], "Vader bruidegom") + " " + get_name(parents[1], "Moeder bruidegom")
         bride_parents_string = get_name(parents[2], "Vader bruid") + " " + get_name(parents[3], "Moeder bruid")
 
-        print()
-        print()
+        # print()
+        # print()
 
         if Levenshtein.distance(partners_string, groom_parents_string) < Levenshtein.distance(partners_string, bride_parents_string):
             links.append([parents[0], partners[0] , "m"])
@@ -219,7 +224,17 @@ def construct_person_links():
             links.append([parents[2], partners[0], "m"])
             links.append([parents[3], partners[1], "v"])
 
-        print(links)
+        # print(links)
+        if len(links) % 1000 == 0:
+            print(len(links))
+            # break
+
+    df_links = pd.DataFrame(links, columns=["parent_id", "partner_id", "sex"])
+    df_links.to_csv("links.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+
+
         # for partner in partners:
         #     get_name(partner)
         #     break
@@ -262,7 +277,7 @@ def construct_person_links():
         # print(f"Saving \"{file}\"\n")
         # plt.savefig(file, format=FORMAT, dpi=DPI)
 
-        break
+        
 
 
     
