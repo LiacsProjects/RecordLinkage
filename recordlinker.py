@@ -9,7 +9,8 @@ import multiprocessing
 """
 Assumptions:
 
-
+Parents are married within a given period relative to the marriage of the children
+This period is declared in the constants given below
 """
 
 MAX_YEARS_BETWEEN_LINKS = 40
