@@ -33,8 +33,18 @@ class RecordLinker():
         self.links = []
         self.year_indexes = {}
 
-        self.df_marriages = pd.read_csv("marriages.csv", sep=";").sort_values(by=["jaar", "maand", "dag"]).reset_index(drop=True)
-        self.df_persons = pd.read_csv("persons.csv", sep=";")
+        self.df_marriages = pd.read_csv("data\\marriages.csv", sep=";").sort_values(by=["jaar", "maand", "dag"]).reset_index(drop=True)
+        self.df_persons = pd.read_csv("data\\persons.csv", sep=";")
+
+        self.total_certificates = len(self.df_marriages.index)
+
+        print(f"""
+            Linking {self.total_certificates} certificates
+            -- maximum years between links: {MAX_YEARS_BETWEEN_LINKS}
+            -- minimum years between links: {MIN_YEARS_BETWEEN_LINKS}
+            -- maximum Levenshtein distance: {MAX_LEVENSTHEIN}
+
+        """)
 
 
     def get_name(self, person_id):
@@ -56,15 +66,16 @@ class RecordLinker():
 
     def find_linking_certificates(self, df_marriages):
         links = []
+        matches = []
         exceptions = []
         count = 0
         for marriage in df_marriages.itertuples():
-            if count % 100 == 0:
-                print(len(links), count)
+            # if count % 1000 == 0:
+            #     print(len(links), count)
                 # print(round(count / len(df_marriages.index), 3), os.getpid(), len(links))
             
-            if len(links) > 50:
-                break
+            # if len(links) > 50:
+            #     break
 
             count += 1
 
@@ -109,8 +120,9 @@ class RecordLinker():
                 
                     if distance <= MAX_LEVENSTHEIN:
                         # print(groom_name + " " + bride_name, parent[0] + " " + parent[1])
-                        links.append([marriage.id,                  # id certificate
-                            potential_match.id, 
+                        links.append([
+                            marriage.id,                  # id certificate parents
+                            potential_match.id,           # id certificate partners
                             groom_id, 
                             parent[2], 
                             bride_id, 
@@ -119,39 +131,32 @@ class RecordLinker():
                             len(groom_name + " " + bride_name), 
                             len(parent[0] + " " + parent[1]),
                             marriage.jaar - potential_match.jaar])
+
+                        matches.append([self.df_persons.at[groom_id, parent[2], "m"]])
+                        matches.append([self.df_persons.at[bride_id, parent[3], "v"]])
                         continue
-        return links, exceptions
+                        
+        return links, exceptions, count
 
 
     def find_links(self):
-        print("zoek certificaat van ouders")
-
         for year in range(1811, 1951):
             self.year_indexes[year] = self.df_marriages.jaar.searchsorted(year)
 
-        dfs = np.array_split(self.df_marriages, multiprocessing.cpu_count() * 2)
+        splitted_dfs_marriages = np.array_split(self.df_marriages, multiprocessing.cpu_count() * 2)
 
         with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
-            for links, exceptions in pool.imap_unordered(self.find_linking_certificates, dfs):
-                
-
-
-
-                # print(links, exceptions)
+            for links, exceptions, amount_of_certificates in pool.imap_unordered(self.find_linking_certificates, splitted_dfs_marriages):
                 self.links += links
+                self.exceptions += exceptions
 
-                print("klaar!", len(links), len(self.links))
-                # if len(links) > 1:
-                #     break
-
-                # self.exceptions += exceptions
-
-                # print(len(links))
-                # break
-
-
-        print(self.exceptions)
-
+                print(f"""
+                    -------------------------------------
+                    Batch has been processed
+                    Certificates in batch: {amount_of_certificates}
+                    Links in batch: {len(links)}
+                    Total amount of links: {len(self.links)}
+                """)
 
         df_links = pd.DataFrame(self.links, columns=[
             "parents_id", 
@@ -165,10 +170,13 @@ class RecordLinker():
             "length parents",
             "years_between"])
 
+        df_links.to_csv(unique_file_name(f"results\\Links RecordLinker {MIN_YEARS_BETWEEN_LINKS}-{MAX_YEARS_BETWEEN_LINKS}", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
-        df_links.to_csv(unique_file_name("results\\links", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-
-        print(f"Run took {round(time() - self.start, 2)} seconds")
+        print(f"""
+            -------------------------------------
+            Run took {round(time() - self.start, 2)} seconds
+            {len(df_links.index)} links found!
+        """)
 
 
 if __name__ == '__main__':
