@@ -162,16 +162,19 @@ def get_relations():
         bride_father_id = marriage.id * 6 + 4
         bride_mother_id = marriage.id * 6 + 5
 
+        relations.append([marriage.bruidegom_uuid, marriage.bruid_uuid, "m", "v", "partner"])
         if valid_name(groom_father_id):
-            relations.append([marriage.bruidegom_uuid, marriage.vader_bruidegom_uuid, "zoon", "vader"])
+            relations.append([marriage.bruidegom_uuid, marriage.vader_bruidegom_uuid, "m", "m", "zoon"])
         if valid_name(groom_mother_id):
-            relations.append([marriage.bruidegom_uuid, marriage.moeder_bruidegom_uuid, "zoon", "moeder"])
+            relations.append([marriage.bruidegom_uuid, marriage.moeder_bruidegom_uuid, "m", "v", "zoon"])
         if valid_name(bride_father_id):    
-            relations.append([marriage.bruid_uuid, marriage.vader_bruid_uuid, "dochter", "vader"])
+            relations.append([marriage.bruid_uuid, marriage.vader_bruid_uuid, "v", "m", "dochter"])
         if valid_name(bride_mother_id):
-            relations.append([marriage.bruid_uuid, marriage.moeder_bruid_uuid, "dochter", "moeder"])
+            relations.append([marriage.bruid_uuid, marriage.moeder_bruid_uuid, "v", "v", "dochter"])
+        
 
-    df_relations = pd.DataFrame(relations, columns=["rel1_id", "rel2_id", "role1", "role2"])
+
+    df_relations = pd.DataFrame(relations, columns=["rel1_id", "rel2_id", "rel1_sex", "rel2_sex", "rel_type"])
     df_relations.to_csv("data\\relations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)    
 
 
