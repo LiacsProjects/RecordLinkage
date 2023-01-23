@@ -53,7 +53,7 @@ def get_tree():
 
     print("Constructing graph")
     for match in df_matches.itertuples():
-        if match[0] == 10000:
+        if match[0] == 1000:
             print(match[0])
             break
 
@@ -75,14 +75,15 @@ def get_tree():
     
     print("Generating positions")
 
-    # pos = graphviz_layout(G, prog="twopi")
-    pos = graphviz_layout(family_graph_max, prog="dot")
-    # pos = nx.spring_layout(G)
+    # pos = graphviz_layout(family_graph_max, prog="twopi")
+    # pos = graphviz_layout(family_graph_max, prog="dot")
+    pos = nx.spring_layout(family_graph_max)
     
     print("Drawing graph")
     nx.draw(family_graph_max, pos)
 
     file = unique_file_name("trees\\Partial tree", FORMAT)
+    nx.drawing.nx_pydot.write_dot(family_graph_max, unique_file_name("trees\\Partial tree", "dot"))
     print(f"Saving \"{file}\"\n")
     plt.savefig(file, format=FORMAT, dpi=DPI)
 
@@ -113,6 +114,7 @@ def get_tree_all(layout, size):
     nx.draw(G, pos, node_size=50)
     # nx.drawing.nx_pydot.write_dot(G,path)
     file = unique_file_name(f"trees\\Complete tree {layout} {str(size)}", FORMAT)
+    nx.drawing.nx_pydot.write_dot(G, unique_file_name("trees\\Complete tree", "dot"))
     print(f"Saving \"{file}\"\n")
     fig.savefig(file, format=FORMAT, dpi=DPI)
 
@@ -179,8 +181,8 @@ def get_tree_individuals(uuid):
             color = "black"
             if relation.rel_type == "partner":
                 color = "green"
-
-            family_graph.add_edge(relation.rel1_id, relation.rel2_id, color=color)
+            else:
+                family_graph.add_edge(relation.rel1_id, relation.rel2_id, color=color)
 
             if relation.rel_type != "partner":
                 links = df_links.loc[df_links["parent_id"] == relation.rel2_id]
@@ -202,9 +204,9 @@ def get_tree_individuals(uuid):
 
     node_color_map = nx.get_node_attributes(family_graph, 'color').values()
 
-    # pos = graphviz_layout(family_graph, prog="dot")
+    pos =  nx.nx_agraph.graphviz_layout(family_graph, prog="dot")
     # pos = nx.spring_layout(family_graph)
-    pos = graphviz_layout(family_graph, prog="twopi")
+    # pos = nx.nx_agraph.graphviz_layout(family_graph, prog="twopi")
     
     print("Drawing graph")
     try:
@@ -219,155 +221,6 @@ def get_tree_individuals(uuid):
     plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
-
-    #     if relation.role1 == "zoon":
-    #         family_node_color_map.append('blue')
-    #     else:
-    #         family_node_color_map.append('purple')
-    #     graph.add_node(relation.rel1_id)
-
-    #     df_rels = df_relations.loc[df_relations["rel1_id"] == id]
-    #     for rel in df_rels.iterrows():
-    #         graph.add_edge(relation.rel1_id, relation.rel2_id, color='black')
-
-    
-
-    # links = df_links.loc[df_links["partner_id"] == uuid]
-    # print("Length:", len(links.index))
-    # if len(links.index) == 0:
-    #     links = df_links.loc[df_links["parents_id"] == uuid]
-    # rels = df_relations.loc[df_relations["rel1_id"] == uuid].reset_index(drop=True)
-    # rel_nr = 1
-    # if len(rels.index) == 0:
-    #     rels = df_relations.loc[df_relations["rel2_id"] == uuid].reset_index(drop=True)
-    #     rel_nr = 2
-
-    # print("Rel nr:", rel_nr)
-
-    # if rels.at[0, f'sex{rel_nr}'] == "m":
-    #     family_graph.add_node(uuid, color='blue')
-    # else:
-    #     family_graph.add_node(uuid, color='purple')
-
-    # for rel in rels.itertuples():
-    #     if rel_nr == 1: 
-    #         if rel.role2 == "m":
-    #             family_graph.add_node(rel.rel2_id, color='blue')
-    #         else:
-    #             family_graph.add_node(rel.rel2_id, color='purple')
-    #     else:
-    #         if rel.role1 == "m":
-    #             family_graph.add_node(rel.rel1_id, color='blue')   
-    #         else:
-    #             family_graph.add_node(rel.rel1_id, color='purple') 
-
-    #     family_graph.add_edge(rel.rel1_id, rel.rel2_id, color='black')
-    
-    # for node in family_graph.nodes():
-    #     print(node)
-    # print([family_graph[n] for n in family_graph.nodes()])
-
-
-
-
-    # uuid
-#     find matches
-#       -> ids same person
-# 
-# for
-#   find rels
-#    -> col 1
-#    -> col 2
-#       
-#       for
-#         matches
-#          redo
-# 
-
-
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-
-
-
-
-
-
-
-
-
-
-
-    # for relation in df_relations.itertuples():
-    #     if relation.Index < 39693:
-    #         continue
-    #     family_graph = nx.Graph()
-    #     family_node_color_map = []
-
-
-    #     """
-    #     Doe dat je een uuid geeft, en dat daaruit dan de grafiek gemaakt wordt
-        
-    #     """
-    #     if relation.role1 == "zoon":
-    #         family_node_color_map.append('blue')
-    #     else:
-    #         family_node_color_map.append('purple')
-    #     family_graph.add_node(relation.rel1_id)
-
-    #     if relation.role2 == "vader":
-    #         family_node_color_map.append('blue')
-    #     else:
-    #         family_node_color_map.append('purple')
-    #     family_graph.add_node(relation.rel2_id)
-
-    #     family_graph.add_edge(relation.rel1_id, relation.rel2_id, color='black')
-
-    #     print(relation)
-    #     if df_relations.at[relation.Index + 1, "rel1_id"] == relation.rel1_id:
-    #         other_rel = df_relations.at[relation.Index + 1, "rel2_id"]
-    #         if df_relations.at[relation.Index + 1, "role2"] == "vader":
-    #             family_node_color_map.append('blue')
-    #         else:
-    #             family_node_color_map.append('purple')
-    #         family_graph.add_node(other_rel)
-    #         family_graph.add_edge(relation.rel1_id, other_rel, color='black')
-
-    #     df_match = df_links.loc[df_links["partner_id"] == relation.rel1_id]
-    #     print(df_match)
-
-        
-
-    #     break
-
-
-
-
-
-
-get_tree_individuals("58ca5c18-c370-7137-5177-bab49e958ff0")
+# get_tree_individuals("58ca5c18-c370-7137-5177-bab49e958ff0")
+get_tree_individuals("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
 

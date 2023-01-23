@@ -1,0 +1,4 @@
+"id";"uuid";"rol";"voornaam";"tussenvoegsel";"geslachtsnaam";"leeftijd";"beroep";"geboorteplaats";"dag";"maand";"jaar";"woonplaats"
+0;"14898b20-855e-5eb5-4892-1c7352799389";"Kind";"Cornelia";"";"Schravemade";0;"";"Leiden";5;7;1838;"Galgstraat, wijk 5"
+1;"d34e3cdf-2259-1d0a-c3f4-06be5f5b0f55";"Vader";"Leendert";"";"Schravemade";0;"daggelder";"";0;0;0;""
+2;"16e8d83f-e1c6-17b8-5391-9961bee2b011";"Moeder";"Catharina";"";"Meijer";0;"";"";0;0;0;""

@@ -7,6 +7,9 @@ INDEX_GROOM_MOTHER = 66
 INDEX_BRIDE = 84
 INDEX_BRIDE_FATHER = 102
 INDEX_BRIDE_MOTHER = 120
+INDEX_CHILD = 29
+INDEX_FATHER = 48
+INDEX_MOTHER = 67
 
 
 def get_match_uuid():
@@ -29,7 +32,7 @@ def clean(value):
     return str(value).replace("<NA>", "").strip()
 
 
-def generate_persons():
+def generate_persons_marriage():
 
     def get_date(date:str):
 
@@ -143,6 +146,118 @@ def generate_persons():
     df_persons.to_csv("persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
+def generate_persons_birth():
+
+    def get_date(date:str):
+
+        def keep_numeric(text):
+            return int("".join([ch for ch in text if ch.isnumeric()]))
+
+        try:
+            date_list = date.split("-")
+            if date[2] == "-":
+                index_day, index_month, index_year = 0, 1, 2
+            else:
+                index_day, index_month, index_year = 2, 1, 0
+
+            return keep_numeric(date_list[index_day]), keep_numeric(date_list[index_month]), keep_numeric(date_list[index_year])
+
+        except Exception as e:
+            # print(e, "date")
+            return 0, 0, 0
+
+
+    def get_age(age_raw:str):
+        try:
+            age = ''
+            for ch in age_raw:
+                if ch.isnumeric():  
+                    age += ch
+
+            if len(age) > 0:
+                return int(age)
+            else:
+                return 0
+        except Exception as e:
+            # print(e, "age")
+            return 0
+
+
+    def get_index(role):
+        if role == "Kind":
+            return INDEX_CHILD
+        if role == "Vader":
+            return INDEX_FATHER
+        if role == "Moeder":
+            return INDEX_MOTHER
+    
+
+    df_births_unfiltered = pd.read_csv(r'data\unprocessed\Geboorte.csv', sep=";", dtype="string")
+    persons = []
+    births = []
+    person_id = 0
+
+    for birth_unfiltered in df_births_unfiltered.itertuples():
+        day, month, year = get_date(birth_unfiltered[43])        
+
+        birth = [
+            birth_unfiltered[0],                     # id
+            birth_unfiltered[1],                     # uuid
+            day, month, year]                           # Date
+
+        # print(birth)
+        births.append(birth)
+    
+        for role in ["Kind", "Vader", "Moeder"]:
+            index = get_index(role)
+            birth_day, birth_month, birth_year = get_date(clean(birth_unfiltered[index + 14]))
+
+            person = [
+                person_id,                                          # id
+                birth_unfiltered[index],                         # uuid
+                role,                                               # Role
+                clean(birth_unfiltered[index + 9]),              # Voornaam
+                clean(birth_unfiltered[index + 10]),             # Tussenvoegsel
+                clean(birth_unfiltered[index + 11]),             # Geslachtsnaam
+                get_age(clean(birth_unfiltered[index + 17])),    # Age
+                clean(birth_unfiltered[index + 16]),             # Beroep
+                clean(birth_unfiltered[index + 13]),             # Geboorte plaats
+                birth_day, birth_month, birth_year,                 # Geboorte datum
+                clean(birth_unfiltered[index + 12])]             # Woonplaats
+            
+            persons.append(person)
+            person_id += 1
+            # print(person)
+
+        # break
+
+
+    df_births = pd.DataFrame(births, columns=[
+        "id", 
+        "uuid", 
+        "dag", 
+        "maand", 
+        "jaar"])
+
+    df_persons = pd.DataFrame(persons, columns=[
+        "id", 
+        "uuid", 
+        "rol", 
+        "voornaam", 
+        "tussenvoegsel", 
+        "geslachtsnaam", 
+        "leeftijd", 
+        "beroep", 
+        "geboorteplaats", 
+        "dag",
+        "maand", 
+        "jaar", 
+        "woonplaats"])
+
+    df_births.to_csv("births.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv("persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
 def get_relations():  
     df_marriages = pd.read_csv("data\\marriages met uuid.csv", sep=";")
     df_persons = pd.read_csv("data\\persons.csv", sep=";")
@@ -178,5 +293,5 @@ def get_relations():
     df_relations.to_csv("data\\relations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)    
 
 
-get_relations()
+generate_persons_birth()
 
