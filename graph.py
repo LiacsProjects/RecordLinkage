@@ -132,7 +132,6 @@ def get_tree_individuals(uuid):
     df_links = pd.read_csv("data\\links.csv", sep=";")
 
     family_graph = nx.Graph()
-    # node_color_map = []
 
 
     def find_relations(uuid):
@@ -153,7 +152,6 @@ def get_tree_individuals(uuid):
 
             relations.append(rel)
 
-        print(partner)
         df_rels = df_relations.loc[df_relations["rel1_id"] == partner]
         for rel in df_rels.itertuples():
             if rel.rel_type != "partner":
@@ -161,9 +159,9 @@ def get_tree_individuals(uuid):
 
         return relations
 
+
     def add_node(uuid, sex):
         if uuid not in family_graph:
-            print(sex)
             if sex == "m":
                 color = "blue"
             elif sex == "v":
@@ -172,11 +170,9 @@ def get_tree_individuals(uuid):
                 color = "red"
             family_graph.add_node(uuid, color=color, value=0)
 
+
     def recurions(uuid, depth):
-        # if depth > 1:
-        #     return
         for relation in find_relations(uuid):
-            # print("Relation found", relation[2], relation[0])
             add_node(relation.rel1_id, relation.rel1_sex)
             add_node(relation.rel2_id, relation.rel2_sex)
 
@@ -187,37 +183,12 @@ def get_tree_individuals(uuid):
             family_graph.add_edge(relation.rel1_id, relation.rel2_id, color=color)
 
             if relation.rel_type != "partner":
-                print("Looking for match:", relation.rel2_id)
                 links = df_links.loc[df_links["parent_id"] == relation.rel2_id]
 
                 for link in links.itertuples():
                     add_node(link.partner_id, link.sex)
                     family_graph.add_edge(relation.rel2_id, link.partner_id, color='red')
                     recurions(link.partner_id, depth + 1)
-
-
-            # links = df_links.loc[df_links[f"{relation[2]}_id"] == relation[0]]
-            # # print(links)
-            # for link in links.itertuples():
-                
-            #     if link.sex == "m":
-            #         node_color_map.append('blue')
-            #     else:
-            #         node_color_map.append('purple')
-
-            #     if relation[2] == "partner":
-            #         # print("Match found", link.parent_id)
-            #         family_graph.add_node(link.parent_id)
-            #         family_graph.add_edge(relation[0], link.parent_id, color='red')
-            #         recurions(link.parent_id)
-            #     else:
-            #         # print("Match found", link.partner_id)
-            #         family_graph.add_node(link.partner_id)
-            #         family_graph.add_edge(relation[0], link.partner_id, color='red')
-            #         recurions(link.partner_id)
-
-
-
 
 
     add_node(uuid, "d")
@@ -231,21 +202,19 @@ def get_tree_individuals(uuid):
 
     node_color_map = nx.get_node_attributes(family_graph, 'color').values()
 
-    print("\n", node_color_map)
-
-
-    pos = graphviz_layout(family_graph, prog="dot")
+    # pos = graphviz_layout(family_graph, prog="dot")
+    # pos = nx.spring_layout(family_graph)
     pos = graphviz_layout(family_graph, prog="twopi")
-    # pos = nx.spring_layout(G)
     
     print("Drawing graph")
     try:
-        nx.draw(family_graph, pos, node_color=node_color_map, edge_color=edge_color_map)
+        nx.draw(family_graph, pos, node_color=node_color_map, edge_color=edge_color_map, node_size=50)
     except:
         print("Drawing failed!")
-        nx.draw(family_graph, pos, edge_color=edge_color_map)
+        nx.draw(family_graph, pos, edge_color=edge_color_map, node_size=50)
 
     file = unique_file_name("trees\\Partial tree individual", FORMAT)
+    nx.drawing.nx_pydot.write_dot(family_graph, unique_file_name("trees\\Partial tree individual", "dot"))
     print(f"Saving \"{file}\"\n")
     plt.savefig(file, format=FORMAT, dpi=DPI)
 
