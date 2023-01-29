@@ -53,7 +53,7 @@ def get_tree():
 
     print("Constructing graph")
     for match in df_matches.itertuples():
-        if match[0] == 1000:
+        if match[0] == 10000:
             print(match[0])
             break
 
@@ -181,8 +181,8 @@ def get_tree_individuals(uuid):
             color = "black"
             if relation.rel_type == "partner":
                 color = "green"
-            else:
-                family_graph.add_edge(relation.rel1_id, relation.rel2_id, color=color)
+        
+            family_graph.add_edge(relation.rel1_id, relation.rel2_id, color=color)
 
             if relation.rel_type != "partner":
                 links = df_links.loc[df_links["parent_id"] == relation.rel2_id]
@@ -204,9 +204,9 @@ def get_tree_individuals(uuid):
 
     node_color_map = nx.get_node_attributes(family_graph, 'color').values()
 
-    pos =  nx.nx_agraph.graphviz_layout(family_graph, prog="dot")
+    # pos =  nx.nx_agraph.graphviz_layout(family_graph, prog="dot")
     # pos = nx.spring_layout(family_graph)
-    # pos = nx.nx_agraph.graphviz_layout(family_graph, prog="twopi")
+    pos = nx.nx_agraph.graphviz_layout(family_graph, prog="twopi")
     
     print("Drawing graph")
     try:
@@ -215,12 +215,23 @@ def get_tree_individuals(uuid):
         print("Drawing failed!")
         nx.draw(family_graph, pos, edge_color=edge_color_map, node_size=50)
 
-    file = unique_file_name("trees\\Partial tree individual", FORMAT)
+    file = unique_file_name("trees\\Partial tree test", FORMAT)
     nx.drawing.nx_pydot.write_dot(family_graph, unique_file_name("trees\\Partial tree individual", "dot"))
     print(f"Saving \"{file}\"\n")
     plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
 # get_tree_individuals("58ca5c18-c370-7137-5177-bab49e958ff0")
-get_tree_individuals("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
+# get_tree_individuals("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
+get_tree_individuals("993347ec-d930-043e-1fb9-e975d4d55787")
+
+
+
+
+def draw_graph_from_file(path):
+    G = nx.Graph(nx.nx_pydot.read_dot(path))
+    # file = unique_file_name(f"trees\\{}", FORMAT)
+
+    print(f"Saving \"{file}\"\n")
+    plt.savefig(file, format=FORMAT, dpi=DPI)
 

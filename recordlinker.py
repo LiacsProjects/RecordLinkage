@@ -71,9 +71,9 @@ class RecordLinker():
         exceptions = []
         count = 0
         for marriage in df_marriages.itertuples():
-            # if count % 1000 == 0:
-            #     print(len(links), count)
-                # print(round(count / len(df_marriages.index), 3), os.getpid(), len(links))
+            if count % 1000 == 0:
+                # print(len(links), count)
+                print(round(count / len(df_marriages.index), 3), os.getpid(), len(links))
             
             # if len(links) > 50:
             #     break
@@ -81,7 +81,7 @@ class RecordLinker():
             count += 1
 
             # if marriage.id % 100 == 0:
-                # print(marriage.jaar, marriage.id, len(links))
+            #     print(marriage.jaar, marriage.id, len(links))
 
             if not marriage.jaar in range(1811, 1951):
                 exceptions.append([marriage.id, marriage.uuid, "year not in correct period or incorrect format used"])
