@@ -223,15 +223,33 @@ def get_tree_individuals(uuid):
 
 # get_tree_individuals("58ca5c18-c370-7137-5177-bab49e958ff0")
 # get_tree_individuals("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
-get_tree_individuals("993347ec-d930-043e-1fb9-e975d4d55787")
+# get_tree_individuals("993347ec-d930-043e-1fb9-e975d4d55787")
 
 
 
 
-def draw_graph_from_file(path):
+def draw_graph_from_file(path, layout="twopi"):
     G = nx.Graph(nx.nx_pydot.read_dot(path))
-    # file = unique_file_name(f"trees\\{}", FORMAT)
 
+    if layout == "dot" or layout == "twopi":
+        pos =  graphviz_layout(G, prog=layout)
+    else:
+        pos = nx.spring_layout(G)
+    
+    node_color_map = nx.get_node_attributes(G, 'color').values()
+    print("len nodes", len(node_color_map))
+    edge_color_map = [G[u][v]['color'] for u,v in G.edges()]
+
+    try:
+        nx.draw(G, pos, node_color=node_color_map, edge_color=edge_color_map, node_size=50)
+    except Exception as e:
+        print("Drawing failed!", e)
+        nx.draw(G, pos, edge_color=edge_color_map, node_size=50)
+
+    file = unique_file_name("graphs\\Partial tree test", FORMAT)
     print(f"Saving \"{file}\"\n")
     plt.savefig(file, format=FORMAT, dpi=DPI)
+
+
+draw_graph_from_file("trees\\Partial tree individual (5).dot")
 
