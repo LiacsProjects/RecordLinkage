@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import networkx as nx
-import csv
 import os
 from networkx.drawing.nx_pydot import graphviz_layout
 import pandas as pd
@@ -18,7 +17,7 @@ def unique_file_name(path, extension = ""):
     return temp_path + "." + extension
 
 
-def get_tree():
+def get_tree(max_families):
     df_matches = pd.read_csv("data\\clean matches.csv", sep=";")
 
     checked_certificates = []
@@ -53,7 +52,7 @@ def get_tree():
 
     print("Constructing graph")
     for match in df_matches.itertuples():
-        if match[0] == 10000:
+        if match[0] == max_families:
             print(match[0])
             break
 
@@ -71,27 +70,15 @@ def get_tree():
 
         if family_graph.number_of_nodes() > family_graph_max.number_of_nodes():
             family_graph_max = family_graph
-        # break
     
-    print("Generating positions")
-
-    # pos = graphviz_layout(family_graph_max, prog="twopi")
-    # pos = graphviz_layout(family_graph_max, prog="dot")
-    pos = nx.spring_layout(family_graph_max)
-    
-    print("Drawing graph")
-    nx.draw(family_graph_max, pos)
-
-    file = unique_file_name("trees\\Partial tree", FORMAT)
-    nx.drawing.nx_pydot.write_dot(family_graph_max, unique_file_name("trees\\Partial tree", "dot"))
+    file = unique_file_name(f"graphs\\dot\\Partial Graph {max_families}", "dot")
+    nx.drawing.nx_pydot.write_dot(family_graph_max, file)
     print(f"Saving \"{file}\"\n")
-    plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
-def get_tree_all(layout, size):
+def get_graph_all(size):
     df_matches = pd.read_csv("data\\clean matches.csv", sep=";")
 
-    fig = plt.figure(figsize=(40,40))
     G = nx.Graph()
 
     print("Constructing graph")
@@ -104,32 +91,17 @@ def get_tree_all(layout, size):
         if G.number_of_nodes() > size:
             break
     
-    print("Generating positions")
-    if layout == "spring":
-        pos = nx.spring_layout(G)
-    else:
-        pos = graphviz_layout(G, prog=layout)
-    
-    print("Drawing graph")
-    nx.draw(G, pos, node_size=50)
-    # nx.drawing.nx_pydot.write_dot(G,path)
-    file = unique_file_name(f"trees\\Complete tree {layout} {str(size)}", FORMAT)
-    nx.drawing.nx_pydot.write_dot(G, unique_file_name("trees\\Complete tree", "dot"))
+    file = unique_file_name(f"graphs\\dot\\Graph {str(size)}", "dot")
+    nx.drawing.nx_pydot.write_dot(G, file)
     print(f"Saving \"{file}\"\n")
-    fig.savefig(file, format=FORMAT, dpi=DPI)
 
 
-# get_tree()
+# get_tree(1000)
 
-layout = "twopi"
-# layout = "dot"
-# layout = "neato"
-# layout = "spring"
-size = 30000
-# get_tree_all(layout, size)
+# get_tree_all(10000)
 
 
-def get_tree_individuals(uuid):
+def get_graph_individual(uuid):
     df_relations = pd.read_csv("data\\relations.csv", sep=";")
     df_links = pd.read_csv("data\\links.csv", sep=";")
 
@@ -197,59 +169,60 @@ def get_tree_individuals(uuid):
 
     recurions(uuid, 0)
 
-    edge_color_map = [family_graph[u][v]['color'] for u,v in family_graph.edges()]
-    # node_color_map = [family_graph[n]['color'] for n in family_graph.nodes()]
-
-    print(family_graph)
-
-    node_color_map = nx.get_node_attributes(family_graph, 'color').values()
-
-    # pos =  nx.nx_agraph.graphviz_layout(family_graph, prog="dot")
-    # pos = nx.spring_layout(family_graph)
-    pos = nx.nx_agraph.graphviz_layout(family_graph, prog="twopi")
-    
-    print("Drawing graph")
-    try:
-        nx.draw(family_graph, pos, node_color=node_color_map, edge_color=edge_color_map, node_size=50)
-    except:
-        print("Drawing failed!")
-        nx.draw(family_graph, pos, edge_color=edge_color_map, node_size=50)
-
-    file = unique_file_name("trees\\Partial tree test", FORMAT)
-    nx.drawing.nx_pydot.write_dot(family_graph, unique_file_name("trees\\Partial tree individual", "dot"))
+    file = unique_file_name(f"graphs\\dot\\Graph {uuid}", "dot")
+    nx.drawing.nx_pydot.write_dot(family_graph, file)
     print(f"Saving \"{file}\"\n")
-    plt.savefig(file, format=FORMAT, dpi=DPI)
 
 
-# get_tree_individuals("58ca5c18-c370-7137-5177-bab49e958ff0")
-# get_tree_individuals("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
-# get_tree_individuals("993347ec-d930-043e-1fb9-e975d4d55787")
+# get_graph_individual("58ca5c18-c370-7137-5177-bab49e958ff0")
+# get_graph_individual("3c247bcc-e390-2ddd-679d-37f5a4f3b563")
+# get_graph_individual("993347ec-d930-043e-1fb9-e975d4d55787")
 
 
+def draw_graph_from_file(path, size="s", layout="twopi"):
+    if size == "l":
+        fig = plt.figure(figsize=(40,40))
+    else:
+        fig = plt.figure()
 
-
-def draw_graph_from_file(path, layout="twopi"):
     G = nx.Graph(nx.nx_pydot.read_dot(path))
-
-    if layout == "dot" or layout == "twopi":
+    try:
+        G.remove_node("\\n")
+    except:
+        pass
+    
+    print("Calculating positions")
+    if layout == "dot" or layout == "twopi" or layout == "neato":
         pos =  graphviz_layout(G, prog=layout)
     else:
         pos = nx.spring_layout(G)
-    
-    node_color_map = nx.get_node_attributes(G, 'color').values()
-    print("len nodes", len(node_color_map))
-    edge_color_map = [G[u][v]['color'] for u,v in G.edges()]
 
+    try:
+        node_color_map = nx.get_node_attributes(G, 'color').values()
+        edge_color_map = [G[u][v]['color'] for u,v in G.edges()]
+    except Exception as e:
+        print("Color map generation failed!", e)
+        node_color_map, edge_color_map = ["blue"] * len(G.nodes()), ["black"] * len(G.nodes())
+
+    print("Drawing graph")
     try:
         nx.draw(G, pos, node_color=node_color_map, edge_color=edge_color_map, node_size=50)
     except Exception as e:
         print("Drawing failed!", e)
-        nx.draw(G, pos, edge_color=edge_color_map, node_size=50)
+        nx.draw(G, pos, edge_color=edge_color_map, node_size=20)
 
-    file = unique_file_name("graphs\\Partial tree test", FORMAT)
+    name = os.path.splitext(os.path.basename(path))[0]
+    file = unique_file_name(f"graphs\\{FORMAT}\\{name} {layout}", FORMAT)
     print(f"Saving \"{file}\"\n")
-    plt.savefig(file, format=FORMAT, dpi=DPI)
+    fig.savefig(file, format=FORMAT, dpi=DPI)
 
 
-draw_graph_from_file("trees\\Partial tree individual (5).dot")
+# draw_graph_from_file("graphs\\dot\\Graph 58ca5c18-c370-7137-5177-bab49e958ff0.dot")
+# draw_graph_from_file("graphs\\dot\\Graph 3c247bcc-e390-2ddd-679d-37f5a4f3b563.dot")
+# draw_graph_from_file("graphs\\dot\\Graph 993347ec-d930-043e-1fb9-e975d4d55787.dot")
+# draw_graph_from_file("graphs\\dot\\Graph 5000.dot", "l")
+# draw_graph_from_file("graphs\\dot\\Graph 10000.dot", "l")
+# draw_graph_from_file("graphs\\dot\\Graph 50000.dot", "l")
+# draw_graph_from_file("graphs\\dot\\Graph 100000.dot", "l")
+# draw_graph_from_file("graphs\\dot\\Partial Graph 1000.dot", layout="dot")
 
