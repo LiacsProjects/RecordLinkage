@@ -359,12 +359,14 @@ def convertPersonsToRDF(inputData, outputData):
     time_elapsed = datetime.now() - start_time
     print('Time elapsed (hh:mm:ss) {}'.format(time_elapsed))
 
-registrations_csv_path = os.path.abspath(r"data\burgerLinker\registrations.csv")
-output_file_registrations = r"data\burgerLinker\registrations.nq"
-# convertRegistrationsToRDF(registrations_csv_path, output_file_registrations)
-persons_csv_path = r"data\burgerLinker\persons.csv"
-output_file_persons = r"data\burgerLinker\persons.nq"
+registrations_csv_path = os.path.abspath(r"data\burgerLinker\registrations b.csv")
+output_file_registrations = r"data\burgerLinker\registrations b.nq"
+convertRegistrationsToRDF(registrations_csv_path, output_file_registrations)
+persons_csv_path = r"data\burgerLinker\persons b.csv"
+output_file_persons = r"data\burgerLinker\persons b.nq"
 convertPersonsToRDF(persons_csv_path, output_file_persons)
 
 # using the terminal, you can later merge the resulting files using the following cat command:
 # cat registrations.nq persons.nq > merged-dataset.nq
+# cat registrationsb.nq registrationsh.nq > registrations.nq
+# cat personsb.nq personsh.nq > persons.nq
