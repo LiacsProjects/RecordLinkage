@@ -4,6 +4,7 @@ import Levenshtein
 import csv
 import os
 import pandas as pd
+from datetime import datetime
 
 FORMAT = "svg"
 DPI = 300
@@ -146,7 +147,6 @@ def construct_person_links_births():
 
 def unique_individuals():
     df_links_marriages = pd.read_csv("data\\results\\links h persons.csv", sep=";")
-
     df_links_births = pd.read_csv("data\\results\\links b persons.csv", sep=",")
 
     unique_individuals = []
@@ -185,9 +185,78 @@ def unique_individuals():
     df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-unique_individuals()
+# unique_individuals()
 
 
-# def 
-# construct_person_links_births()
+def process_unique_timeline(uuid):
+    df_unique_persons = pd.read_csv("data\\unique_individuals (2).csv", sep=";")
+    df_persons_marriage = pd.read_csv("data\\Marriages\\persons.csv", sep=";")
+    df_registrations_marriage = pd.read_csv("data\\Marriages\\marriages.csv", sep=";")
+    df_births = pd.read_csv("data\\Births\\persons.csv", sep=";")
+
+    unique_person_id = df_unique_persons.loc[df_unique_persons['uuid'] == uuid].iloc[0][ "unique_person_id"]
+
+    references = df_unique_persons.loc[df_unique_persons['unique_person_id'] == unique_person_id]
+
+    print(references)
+    moments = pd.DataFrame(columns=["date", "type", "child", "partner"])
+
+    for index, reference in enumerate(references.itertuples()):
+        if reference.role == "parent birth":
+            person = df_births.loc[df_births['uuid'] == reference.uuid].iloc[0]
+
+            child = df_births.iloc[person['id'] - (person['id'] % 3)]
+
+            date = datetime.strptime(str(child["dag"]) + "-" + str(child["maand"]) + "-" + str(child["jaar"]), "%d-%m-%Y")
+            child_name = child["voornaam"] + " " + child["geslachtsnaam"]
+
+            moments.loc[index, "date"] = date
+            moments.loc[index, "type"] = "Child born"
+            moments.loc[index, "child"] = child_name
+            continue
+
+
+        person = df_persons_marriage.loc[df_persons_marriage['uuid'] == reference.uuid].iloc[0]
+        registration_id = (person['id'] - (person['id'] % 6)) / 6
+
+        date = datetime.strptime(str(df_registrations_marriage.at[registration_id, "dag"]) + "-" + 
+                                    str(df_registrations_marriage.at[registration_id, "maand"]) + "-" + 
+                                    str(df_registrations_marriage.at[registration_id, "jaar"]), "%d-%m-%Y")
+        
+        moments.loc[index, "date"] = date
+
+        if reference.role == "parent":
+            child_id = person['id'] - (person['id'] % 6)
+            if not "bruidegom" in person["rol"]:
+                child_id += 3
+
+            child_name = df_persons_marriage.at[child_id, "voornaam"] + " " + df_persons_marriage.at[child_id, "geslachtsnaam"]
+
+            moments.loc[index, "type"] = "Child married"
+            moments.loc[index, "child"] = child_name
+
+
+        elif reference.role == "partner":        
+            partner_id = person['id'] - (person['id'] % 6)
+            if person["rol"] == "Bruidegom":
+                partner_id += 3
+
+            partner_name = df_persons_marriage.at[partner_id, "voornaam"] + " " + df_persons_marriage.at[partner_id, "geslachtsnaam"]
+
+            moments.loc[index, "type"] = "Married"
+            moments.loc[index, "partner"] = partner_name
+
+
+    moments.sort_values(by=["date"])
+    print(moments)
+    
+
+
+
+        
+
+
+
+
+process_unique_timeline("462f94b1-8751-71f7-17a3-3a23a7192477")
 

@@ -80,7 +80,11 @@ class RecordLinker():
         """)
 
 
-if __name__ == '__main__':
-    multiprocessing.freeze_support()
-    linker = RecordLinker()
-    linker.find_links()
+
+print(3 % 3)
+
+
+# if __name__ == '__main__':
+#     multiprocessing.freeze_support()
+#     linker = RecordLinker()
+#     linker.find_links()
