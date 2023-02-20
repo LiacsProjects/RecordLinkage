@@ -74,5 +74,120 @@ def construct_person_links():
     df_links.to_csv("links.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-construct_person_links()
+def construct_person_links_births():
+    df_links = pd.read_csv("data\\links b uuid.csv", sep=";")
+    df_marriages = pd.read_csv("data\\marriages met uuid.csv", sep=";")
+    df_births = pd.read_csv("data\\unprocessed\\Geboorte.csv", sep=";", dtype="string")
+
+    person_links = []
+
+    for link in df_links.itertuples():
+        birth = df_births.loc[df_births['uuid'] == link.birth_id].iloc[0]
+        marriage = df_marriages.loc[df_marriages['uuid'] == link.marriage_id].iloc[0]
+
+        father = birth["Vader-uuid"]
+        mother = birth["Moeder-uuid"]
+
+        groom = marriage["bruidegom_uuid"]
+        bride = marriage["bruid_uuid"]
+
+        person_links.append([father, groom, "m"])
+        person_links.append([mother, bride, "v"])
+
+    df_person_links = pd.DataFrame(person_links, columns=["parent_id", "partners_id", "sex"])
+    df_person_links.to_csv("data\\links b persons.csv", sep=",", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+    # df_marriages = pd.read_csv("data\\burgerLinker\\Marriages\\registrations.csv", sep=";", dtype="string")
+    # df_births = pd.read_csv("data\\burgerLinker\\Births\\registrations.csv", sep=";", dtype="string")
+    # df_links = pd.read_csv("data\\links b.csv", sep=",")
+    # df_marriages = pd.read_csv("data\\burgerLinker\\Marriages\\persons.csv", sep=";", dtype="string")
+    # df_births = pd.read_csv("data\\burgerLinker\\Births\\persons.csv", sep=";", dtype="string")
+
+    # links_uuid = []
+    # for link in df_links.itertuples():
+    #     # print(link)
+    #     # link.id_certificate_newbornParents
+    #     # link.id_certificate_partners
+    #     try:
+    #         marriage_uuid = df_marriages.at[link.id_certificate_partners - 1, "registration_seq"]
+    #         birth_uuid = df_births.at[link.id_certificate_newbornParents - 1_000_001, "registration_seq"]
+
+    #         links_uuid.append([birth_uuid, marriage_uuid])
+    #     exc
+
+        # father = (int(link.id_certificate_newbornParents) - 1_000_000 - 1) * 3 + 2
+        # mother = (int(link.id_certificate_newbornParents) - 1_000_000 - 1) * 3 + 1
+        
+
+        # print(link.id_certificate_newbornParents)
+        # print(father, mother)
+
+        # groom = (int(link.id_certificate_partners) - 1) * 6 + 3
+        # bride = (int(link.id_certificate_partners) - 1) * 6
+        
+        # print(link.id_certificate_partners)
+        # print(groom, bride)
+
+        # father = df_births.at[father, "firstname"] + df_births.at[father, "familyname"]
+        # mother = df_births.at[mother, "firstname"] + df_births.at[mother, "familyname"]
+
+        # print(father, mother)
+
+        # groom = df_marriages.at[groom, "firstname"] + df_marriages.at[groom, "familyname"]
+        # bride = df_marriages.at[bride, "firstname"] + df_marriages.at[bride, "familyname"]
+
+        # print(groom, bride)
+    #     break
+
+    # df_clean_matches = pd.DataFrame(links_uuid, columns=["parents_id", "partners_id"])
+    # df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+def unique_individuals():
+    df_links_marriages = pd.read_csv("data\\results\\links h persons.csv", sep=";")
+
+    df_links_births = pd.read_csv("data\\results\\links b persons.csv", sep=",")
+
+    unique_individuals = []
+    unique_person_id = 0
+
+    for link_marriage in df_links_marriages.itertuples():
+        if link_marriage.parent_id in [individual[0] for individual in unique_individuals]:
+            continue
+
+        parents = df_links_marriages.loc[df_links_marriages['parent_id'] == link_marriage.parent_id]
+        partners = df_links_marriages.loc[df_links_marriages['partner_id'] == link_marriage.partner_id]
+
+        for parent in parents.itertuples():
+            unique_individuals.append([parent.partner_id, unique_person_id, "parent"])
+
+        references = set()
+        for partner in partners.itertuples():
+            unique_individuals.append([partner.parent_id, unique_person_id, "partner"])
+            # check births
+            parents_birth = df_links_births.loc[df_links_births['partners_id'] == partner.partner_id]
+            for parent_birth in parents_birth.itertuples():
+                references.add(parent_birth.parent_id)
+
+        for reference in references:
+            unique_individuals.append([reference, unique_person_id, "parent birth"])
+    
+        unique_person_id += 1
+
+        if unique_person_id % 1000 == 0:
+            print(unique_person_id)
+
+        if unique_person_id == 3000:
+            break
+    
+    df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role"])
+    df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+unique_individuals()
+
+
+# def 
+# construct_person_links_births()
 

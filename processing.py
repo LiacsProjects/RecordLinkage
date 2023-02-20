@@ -27,6 +27,21 @@ def get_match_uuid():
     df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
+def get_link_uuid_birth():
+    df_marriages = pd.read_csv("data\\burgerLinker\\Marriages\\registrations.csv", sep=";", )
+    df_births = pd.read_csv("data\\burgerLinker\\Births\\registrations.csv", sep=";")
+    df_links = pd.read_csv("data\\links b.csv", sep=",")
+
+    links_uuid = []
+    for link in df_links.itertuples():     
+        marriage_uuid = df_marriages.loc[df_marriages['id_registration'] == link.id_certificate_partners].iloc[0]['registration_seq']
+        birth_uuid = df_births.loc[df_births['id_registration'] == link.id_certificate_newbornParents].iloc[0]['registration_seq']
+
+        links_uuid.append([birth_uuid, marriage_uuid])
+
+    df_clean_matches = pd.DataFrame(links_uuid, columns=["birth_id", "marriage_id"])
+    df_clean_matches.to_csv("data\\link b uuid.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
 
 def clean(value):
     return str(value).replace("<NA>", "").strip()
@@ -293,5 +308,5 @@ def get_relations():
     df_relations.to_csv("data\\relations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)    
 
 
-generate_persons_birth()
+# generate_persons_birth()
 
