@@ -160,11 +160,11 @@ def unique_individuals():
         partners = df_links_marriages.loc[df_links_marriages['partner_id'] == link_marriage.partner_id]
 
         for parent in parents.itertuples():
-            unique_individuals.append([parent.partner_id, unique_person_id, "parent"])
+            unique_individuals.append([parent.partner_id, unique_person_id, "partner"])
 
         references = set()
         for partner in partners.itertuples():
-            unique_individuals.append([partner.parent_id, unique_person_id, "partner"])
+            unique_individuals.append([partner.parent_id, unique_person_id, "parent"])
             # check births
             parents_birth = df_links_births.loc[df_links_births['partners_id'] == partner.partner_id]
             for parent_birth in parents_birth.itertuples():
@@ -178,7 +178,7 @@ def unique_individuals():
         if unique_person_id % 1000 == 0:
             print(unique_person_id)
 
-        if unique_person_id == 3000:
+        if unique_person_id == 100:
             break
     
     df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role"])
@@ -189,7 +189,7 @@ def unique_individuals():
 
 
 def process_unique_timeline(uuid):
-    df_unique_persons = pd.read_csv("data\\unique_individuals (2).csv", sep=";")
+    df_unique_persons = pd.read_csv("data\\unique_individuals (4).csv", sep=";")
     df_persons_marriage = pd.read_csv("data\\Marriages\\persons.csv", sep=";")
     df_registrations_marriage = pd.read_csv("data\\Marriages\\marriages.csv", sep=";")
     df_births = pd.read_csv("data\\Births\\persons.csv", sep=";")
@@ -199,32 +199,33 @@ def process_unique_timeline(uuid):
     references = df_unique_persons.loc[df_unique_persons['unique_person_id'] == unique_person_id]
 
     print(references)
-    moments = pd.DataFrame(columns=["date", "type", "child", "partner"])
+    moments = pd.DataFrame(columns=["day", "month", "year", "type", "child", "partner", "uuid"])
 
     for index, reference in enumerate(references.itertuples()):
         if reference.role == "parent birth":
             person = df_births.loc[df_births['uuid'] == reference.uuid].iloc[0]
 
             child = df_births.iloc[person['id'] - (person['id'] % 3)]
-
-            date = datetime.strptime(str(child["dag"]) + "-" + str(child["maand"]) + "-" + str(child["jaar"]), "%d-%m-%Y")
             child_name = child["voornaam"] + " " + child["geslachtsnaam"]
 
-            moments.loc[index, "date"] = date
+            moments.loc[index, "day"] = int(child["dag"])
+            moments.loc[index, "month"] = int(child["maand"])
+            moments.loc[index, "year"] = int(child["jaar"])
+
             moments.loc[index, "type"] = "Child born"
             moments.loc[index, "child"] = child_name
+            moments.loc[index, "uuid"] = reference.uuid
             continue
-
 
         person = df_persons_marriage.loc[df_persons_marriage['uuid'] == reference.uuid].iloc[0]
         registration_id = (person['id'] - (person['id'] % 6)) / 6
 
-        date = datetime.strptime(str(df_registrations_marriage.at[registration_id, "dag"]) + "-" + 
-                                    str(df_registrations_marriage.at[registration_id, "maand"]) + "-" + 
-                                    str(df_registrations_marriage.at[registration_id, "jaar"]), "%d-%m-%Y")
-        
-        moments.loc[index, "date"] = date
+        moments.loc[index, "day"] = int(df_registrations_marriage.at[registration_id, "dag"])
+        moments.loc[index, "month"] = int(df_registrations_marriage.at[registration_id, "maand"])
+        moments.loc[index, "year"] = int(df_registrations_marriage.at[registration_id, "jaar"])
 
+        moments.loc[index, "uuid"] = reference.uuid
+        
         if reference.role == "parent":
             child_id = person['id'] - (person['id'] % 6)
             if not "bruidegom" in person["rol"]:
@@ -246,17 +247,11 @@ def process_unique_timeline(uuid):
             moments.loc[index, "type"] = "Married"
             moments.loc[index, "partner"] = partner_name
 
-
-    moments.sort_values(by=["date"])
+    moments = moments.sort_values(by=["year", "month", "day"])
     print(moments)
     
 
-
-
-        
-
-
-
+    moments.to_csv(unique_file_name("moments", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 process_unique_timeline("462f94b1-8751-71f7-17a3-3a23a7192477")
 
