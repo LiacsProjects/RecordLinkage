@@ -8,9 +8,10 @@ import multiprocessing
 
 
 WHITELIST = set("abcdefghijklmnopqrstuvwxyz ")
-MAX_YEARS_BETWEEN_LINKS = 40
+MAX_YEARS_BETWEEN_LINKS = 100
 MIN_YEARS_BETWEEN_LINKS = 15
 MAX_LEVENSTHEIN = 3
+
 
 def unique_file_name(path, extension = ""):
     i = 0
@@ -24,8 +25,8 @@ def unique_file_name(path, extension = ""):
 class RecordLinker():
     def __init__(self):
         self.start = time()
-        # self.exceptions = []
-        # self.links = []
+        self.links_persons = []
+        self.links_certs = []
         self.year_indexes = {}
 
         print(f"""
@@ -120,55 +121,34 @@ class RecordLinker():
 
     def find_links(self):
         self.df_pairs_marriage = pd.read_csv("data\\pairs_marriage.csv", sep=";").sort_values(by=["year"]).reset_index(drop=True)
-        links_persons = []
-        links_certs = []
-        
+
         for year in range(1811, 1951):
             self.year_indexes[year] = self.df_pairs_marriage.year.searchsorted(year)
 
-        # print(self.df_pairs_marriage)
-        # print(self.df_pairs_marriage[self.df_pairs_marriage["role"] == 1])
-        # print(self.year_indexes)
+        for pair_marriage in self.df_pairs_marriage[self.df_pairs_marriage["role"] == 1].reset_index(drop=True).itertuples():
 
-        for pair_marriage in self.df_pairs_marriage[self.df_pairs_marriage["role"] == 1].itertuples():
             if pair_marriage.Index % 100 == 0:
-                print(pair_marriage.year, pair_marriage.Index, len(links_certs))
+                print(pair_marriage.year, pair_marriage.Index, len(self.links_certs))
 
-            # if pair_marriage.Index > 80000:
-            #     break
-            # print(pair_marriage.Index)
-            # print(pair_marriage.first_letters)
+            # Get range of years where a match can happen
+            year_start = min(1950, pair_marriage.year + MIN_YEARS_BETWEEN_LINKS)
+            year_end = min(1950, pair_marriage.year + MAX_YEARS_BETWEEN_LINKS)
 
-
-
-            year = pair_marriage.year
-
-            year_start = min(1950, year + MIN_YEARS_BETWEEN_LINKS)
-            year_end = min(1950, year + MAX_YEARS_BETWEEN_LINKS)
-
-
-            # print(year)
-            # print(year_start, year_end)
+            # Get index of year range
             year_start_index = self.year_indexes[year_start]
             year_end_index = self.year_indexes[year_end]
 
+            # Filter potential matches on year, role and first letters
             df_potential_matches = self.df_pairs_marriage.iloc[year_start_index:year_end_index]
-            # print(len(df_potential_matches.index))
-
             df_potential_matches = df_potential_matches[df_potential_matches["role"] != 1]
-            # print(len(df_potential_matches.index))
-
             df_potential_matches = df_potential_matches[df_potential_matches["first_letters"] == pair_marriage.first_letters]
-            # print(len(df_potential_matches.index))
 
-            # print(pair_marriage.man_uuid)
             for potential_match in df_potential_matches.itertuples():
-
+        
                 distance = Levenshtein.distance(pair_marriage.man + " " + pair_marriage.woman, potential_match.man + " " + potential_match.woman)
                 
                 if distance <= MAX_LEVENSTHEIN:
-                    # print(pair_marriage.man + " " + pair_marriage.woman, potential_match.man + " " + potential_match.woman)
-                    links_certs.append([
+                    self.links_certs.append([
                         pair_marriage.uuid,
                         potential_match.uuid,
                         pair_marriage.man_uuid,
@@ -178,13 +158,13 @@ class RecordLinker():
                         distance, 
                         len(pair_marriage.man + " " + pair_marriage.woman), 
                         len(potential_match.man + " " + potential_match.woman),
-                        pair_marriage.year - potential_match.year])
+                        potential_match.year - pair_marriage.year])
 
-                    links_persons.append([potential_match.man_uuid, pair_marriage.man_uuid, "m"])
-                    links_persons.append([potential_match.woman_uuid, pair_marriage.woman_uuid, "v"])
+                    self.links_persons.append([potential_match.man_uuid, pair_marriage.man_uuid, "m"])
+                    self.links_persons.append([potential_match.woman_uuid, pair_marriage.woman_uuid, "v"])
 
 
-        df_links_certs = pd.DataFrame(links_certs, columns=[
+        df_links_certs = pd.DataFrame(self.links_certs, columns=[
             "partners_id", 
             "parents_id", 
             "groom", 
@@ -196,21 +176,19 @@ class RecordLinker():
             "length parents",
             "years_between"])
 
-        df_links_persons = pd.DataFrame(links_persons, columns=[
+        df_links_persons = pd.DataFrame(self.links_persons, columns=[
             "parent_uuid",
             "partner_uuid", 
             "sex"])
         
-        df_links_certs.to_csv(unique_file_name(f"results\\Links Certs RecordLinker 2.0", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-        df_links_persons.to_csv(unique_file_name(f"results\\Links Persons RecordLinker 2.0", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        df_links_certs.to_csv(unique_file_name(f"results\\Links Certs RecordLinker", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        df_links_persons.to_csv(unique_file_name(f"results\\Links Persons RecordLinker", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
         print(f"""
             -------------------------------------
             Run took {round(time() - self.start, 2)} seconds
             {len(df_links_certs.index)} links found!
         """)
-
-
 
 
 
