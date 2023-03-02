@@ -131,3 +131,4 @@ dmypy.json
 data/processed/
 data/unprocessed/
 data/burgerLinker/
+data/pairs.csv
