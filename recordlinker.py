@@ -16,6 +16,13 @@ AGE_MARRIED_RANGE = {"min": 15,
 AGE_MOTHER_RANGE = {"min": 15,
                     "max": 45}
 
+MODES = {
+    1: {"references": [1], "potential_links": [2, 3]},
+    2: {"references": [1], "potential_links": [4]},
+    3: {"references": [2, 3], "potential_links": [4]},
+    4: {"references": [4], "potential_links": [4]},
+}
+
 
 def unique_file_name(path, extension = ""):
     i = 0
@@ -34,33 +41,38 @@ class RecordLinker():
         self.links_certs = []
         self.year_indexes = {}
 
+        self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
+
         print(f"""
             -- maximum Levenshtein distance: {MAX_LEVENSTHEIN}
-
+            -- mode 1 for hp-ho
+            -- mode 2 for hp-b
+            -- mode 3 for ho-b
+            -- mode 4 for b-b
         """)
     
-    def get_period(self, link_type, age:int=None):
+    def get_period(self, mode, age):
         start = None
         end = None
-        if link_type == "hp-ho":
+        if mode == 1:
             start = AGE_MOTHER_RANGE["min"]
             end = AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"] - AGE_MOTHER_RANGE["min"]
-            if age != None:
+            if age > 14:
                 start = AGE_MOTHER_RANGE["min"]
-                end = AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"] - age 
+                end = AGE_MOTHER_RANGE["max"] - age + AGE_MARRIED_RANGE["max"]
         
-        elif link_type == "hp-b":
+        elif mode == 2:
             start = max(0, AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"])
             end = AGE_MOTHER_RANGE["max"] - AGE_MOTHER_RANGE["min"]
             if age != None:
                 start = max(0, AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"])
                 end = AGE_MOTHER_RANGE["max"] - age
         
-        elif link_type == "ho-b":
+        elif mode == 3:
             start = AGE_MOTHER_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"])
             end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MOTHER_RANGE["min"])
         
-        elif link_type == "b-b":
+        elif mode == 4:
             start = AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"]
             end = AGE_MOTHER_RANGE["max"] - AGE_MOTHER_RANGE["min"]
         
@@ -90,7 +102,7 @@ class RecordLinker():
                 try:
                     role = pair_id[0]
                     child = None
-                    child_birth_year = None
+                    child_age = 0
                     child_uuid = None
 
                     man, letter_man = self.get_name_first_letter(pair_id[1], "marriage")
@@ -101,19 +113,19 @@ class RecordLinker():
 
                     if role != 1:
                         child, _ = self.get_name_first_letter(pair_id[3], "marriage")
-                        child_birth_year = year - self.df_persons_marriage.at[pair_id[3], "leeftijd"] - 1
+                        child_age = int(str(self.df_persons_marriage.at[pair_id[3], "leeftijd"])[:2])
                         child_uuid = self.df_persons_marriage.at[pair_id[3], "uuid"]
                     
-                    pair = [year, 
-                            letter_man + letter_woman, 
-                            role, 
-                            man, 
-                            woman, 
-                            child, 
-                            self.df_persons_marriage.at[pair_id[2], "leeftijd"],
-                            child_birth_year, 
-                            registration_marriage.uuid, 
-                            father_uuid, 
+                    pair = [year,
+                            letter_man + letter_woman,
+                            role,
+                            man,
+                            woman,
+                            int(str(self.df_persons_marriage.at[pair_id[2], "leeftijd"])[:2]),
+                            child,
+                            child_age,
+                            registration_marriage.uuid,
+                            father_uuid,
                             mother_uuid,
                             child_uuid]
                     
@@ -139,7 +151,6 @@ class RecordLinker():
             try:
                 role = 4
                 child, _ = self.get_name_first_letter(child_id, "birth")
-                child_birth_year = year
 
                 man, letter_man = self.get_name_first_letter(father_id, "birth")
                 woman, letter_woman = self.get_name_first_letter(mother_id, "birth")
@@ -151,7 +162,7 @@ class RecordLinker():
                         woman, 
                         0,
                         child, 
-                        child_birth_year, 
+                        0, 
                         registration_birth.uuid, 
                         self.df_persons_birth.at[father_id, "uuid"], 
                         self.df_persons_birth.at[mother_id, "uuid"],
@@ -167,12 +178,12 @@ class RecordLinker():
         df_pairs = pd.DataFrame(pairs, columns=[
             "year", 
             "first_letters", 
-            "role", 
+            "role",  
             "man", 
             "woman", 
             "woman_age",
             "child", 
-            "child_birth_year", 
+            "child_age", 
             "uuid", 
             "man_uuid",
             "woman_uuid",
@@ -217,54 +228,115 @@ class RecordLinker():
 
         return first_name, prefix, last_name
 
+    # def find_links_birth(self):
 
-    def find_links(self):
-        self.df_pairs_marriage = pd.read_csv("data\\pairs.csv", sep=";").sort_values(by=["year"]).reset_index(drop=True)
+    def filter_potential_links(self, df_potential_links, mode):
+
+        if mode == 1:
+            return pd.concat([self.df_pairs[self.df_pairs["role"] == 2], self.df_pairs[self.df_pairs["role"] == 3]])
+        else: 
+            return self.df_pairs[self.df_pairs["role"] == 4]
+        
+
+        self.df_pairs_marriage
+        return df_potential_links
+
+
+
+
+    def filter_pairs(self, mode):
+        references = []
+        for reference in MODES[mode]["references"]:
+            references.append(self.df_pairs[self.df_pairs["role"] == reference])
+
+        potential_links = []
+        for potential_link in MODES[mode]["potential_links"]:
+            potential_links.append(self.df_pairs[self.df_pairs["role"] == potential_link])
+
+        df_references = pd.concat(references).sort_values(by=["year"]).reset_index(drop=True)
+        df_potential_links = pd.concat(potential_links).sort_values(by=["year"]).reset_index(drop=True)
+        return df_references, df_potential_links
+
+
+
+        if mode == 1:
+            references = self.df_pairs[self.df_pairs["role"] == 1]
+            potential_links = pd.concat([self.df_pairs[self.df_pairs["role"] == 2], self.df_pairs[self.df_pairs["role"] == 3]])
+
+        elif mode == 2:
+
+            return self.df_pairs[self.df_pairs["role"] == 1]
+        elif mode == 3:
+
+            return pd.concat([self.df_pairs[self.df_pairs["role"] == 2], self.df_pairs[self.df_pairs["role"] == 3]])
+        elif mode == 4:
+
+            return self.df_pairs[self.df_pairs["role"] == 4]
+        
+
+        return references, potential_links
+
+
+    def find_links(self, mode):
+
+        df_references, df_potential_links = self.filter_pairs(mode)
+        print(df_references["role"])
+        print(df_potential_links["role"])
+        return
+
+
+
+
 
         for year in range(1811, 1951):
-            self.year_indexes[year] = self.df_pairs_marriage.year.searchsorted(year)
+            self.year_indexes[year] = df_references.year.searchsorted(year)
 
-        for pair_marriage in self.df_pairs_marriage[self.df_pairs_marriage["role"] == 1].reset_index(drop=True).itertuples():
 
-            if pair_marriage.Index % 100 == 0:
-                print(pair_marriage.year, pair_marriage.Index, len(self.links_certs))
+        for reference in df_references.itertuples():
+
+            if reference.Index % 100 == 0:
+                print(reference.year, reference.Index, len(self.links_certs))
 
             # Get period where a match can happen
-            period_relative = self.get_period("hp-ho")
-            print(pair_marriage)
+            print("age", reference.woman_age)
+            period_relative = self.get_period(mode, reference.woman_age)
+            print(reference)
             print(period_relative)
-            period = {"start": min(1950, pair_marriage.year + period_relative["start"]), "end": min(1950, pair_marriage.year + period_relative["end"])}
+            period = {"start": max(1811, min(1950, reference.year + period_relative["start"])), "end": max(1811, min(1950, reference.year + period_relative["end"]))}
             print(period)
             # Get index of year range
-            period_index = {"start":self.year_indexes[period["start"]], "end": self.year_indexes[period["end"]]}
+            period_index = {"start": self.year_indexes[period["start"]], "end": self.year_indexes[period["end"]]}
             print(period_index)
-            break
-            # Filter potential matches on year, role and first letters
-            df_potential_matches = self.df_pairs_marriage.iloc[period_index["start"]:period_index["end"]]
-            df_potential_matches = df_potential_matches[df_potential_matches["role"] != 1]
-            df_potential_matches = df_potential_matches[df_potential_matches["first_letters"] == pair_marriage.first_letters]
 
-            for potential_match in df_potential_matches.itertuples():
+            # Filter potential matches on year and first letters
+            print(len(df_potential_links.index))
+            df_potential_links = df_potential_links.iloc[period_index["start"]:period_index["end"]]
+            print(len(df_potential_links.index))
+            df_potential_links = df_potential_links[df_potential_links["first_letters"] == reference.first_letters]
+            print(len(df_potential_links.index))
+
+            for potential_link in df_potential_links.itertuples():
         
-                distance = Levenshtein.distance(pair_marriage.man + " " + pair_marriage.woman, potential_match.man + " " + potential_match.woman)
+                distance = Levenshtein.distance(reference.man + " " + reference.woman, potential_link.man + " " + potential_link.woman)
                 
                 if distance <= MAX_LEVENSTHEIN:
                     self.links_certs.append([
-                        pair_marriage.uuid,
-                        potential_match.uuid,
-                        pair_marriage.man_uuid,
-                        potential_match.man_uuid,
-                        pair_marriage.woman_uuid,
-                        potential_match.woman_uuid,
+                        reference.uuid,
+                        potential_link.uuid,
+                        reference.man_uuid,
+                        potential_link.man_uuid,
+                        reference.woman_uuid,
+                        potential_link.woman_uuid,
                         distance, 
-                        len(pair_marriage.man + " " + pair_marriage.woman), 
-                        len(potential_match.man + " " + potential_match.woman),
-                        potential_match.year - pair_marriage.year])
+                        len(reference.man + " " + reference.woman), 
+                        len(potential_link.man + " " + potential_link.woman),
+                        potential_link.year - reference.year])
 
-                    self.links_persons.append([potential_match.man_uuid, pair_marriage.man_uuid, "m"])
-                    self.links_persons.append([potential_match.woman_uuid, pair_marriage.woman_uuid, "v"])
+                    self.links_persons.append([potential_link.man_uuid, reference.man_uuid, "m"])
+                    self.links_persons.append([potential_link.woman_uuid, reference.woman_uuid, "v"])
+            break
 
-
+        print(len(self.links_certs))
         df_links_certs = pd.DataFrame(self.links_certs, columns=[
             "partners_id", 
             "parents_id", 
@@ -296,6 +368,6 @@ class RecordLinker():
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    linker.find_links()
+    linker.find_links(1)
     # linker.cluster_pairs()
 
