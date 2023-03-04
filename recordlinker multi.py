@@ -5,6 +5,7 @@ import Levenshtein
 import csv
 import os
 import multiprocessing
+import re
 
 
 WHITELIST = set("abcdefghijklmnopqrstuvwxyz ")
@@ -43,13 +44,13 @@ class RecordLinker():
 
         self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
 
-        print(f"""
+        print(re.sub(' +', f"""
             -- maximum Levenshtein distance: {MAX_LEVENSTHEIN}
             -- mode 1 for hp-ho
             -- mode 2 for hp-b
             -- mode 3 for ho-b
             -- mode 4 for b-b
-        """.replace("\t", ""))
+        """))
     
     
     def get_period(self, age=0):
@@ -157,17 +158,24 @@ class RecordLinker():
             with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
                 for df_reference_batch in pool.imap_unordered(self.find_links_batch, df_references_batched):
 
-                    print(f"""
+                    print(re.sub(' +', f"""
                         -------------------------------------
                         Batch has been processed
                         Certificates in batch: {len(df_reference_batch.index)}
-                        Total amount of links: {len(df_links_certs.index)}
-                    """.replace("\t", ""))
+                        Total amount of links: {len(self.links_certs)}
+                    """))
         else:
             for reference in df_references.itertuples():
                 self.find_links_reference(reference)
 
+        print(re.sub(' +', f"""
+            -------------------------------------
+            Run took {round(time() - self.start, 2)} seconds
+            {len(self.links_certs)} links found!
+        """))
 
+
+    def save_links(self):
         df_links_certs = pd.DataFrame(self.links_certs, columns=[
             "mode",
             "reference_uuid", 
@@ -187,18 +195,24 @@ class RecordLinker():
             "link_uuid", 
             "sex"])
         
-        df_links_certs.to_csv(unique_file_name(f"results\\Links Certs RecordLinker", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-        df_links_persons.to_csv(unique_file_name(f"results\\Links Persons RecordLinker", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-
-        print(f"""
+        path_result_certs = unique_file_name(f"results\\Links Certs RecordLinker", "csv")
+        df_links_certs.to_csv(path_result_certs, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        print(re.sub(' +', f"""
             -------------------------------------
-            Run took {round(time() - self.start, 2)} seconds
-            {len(df_links_certs.index)} links found!
-        """)
+            Saved person link at {path_result_certs}
+        """))
+
+        path_result_persons = unique_file_name(f"results\\Links Persons RecordLinker", "csv")
+        df_links_persons.to_csv(path_result_persons, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        print(re.sub(' +', f"""
+            -------------------------------------
+            Saved person link at {path_result_persons}
+        """))
 
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    linker.find_links(4)
+    linker.find_links(1)
+    linker.save_links()
 
