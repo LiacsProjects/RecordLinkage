@@ -42,14 +42,22 @@ class RecordLinker():
         self.links_certs = []
         self.year_indexes = {}
 
-        self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
+        # self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
 
-        print(re.sub(' +', f"""
+        print("""
+                    /)
+            /\___/\ ((
+            \`@_@'/  ))
+            {_:Y:.}_//""" +  re.sub(" +", " ", f"""
+            -----------(_)^-'(_)-----------------
+            WELCOME TO THE RECORDLINKER! :)
+            -------------------------------------
             -- maximum Levenshtein distance: {MAX_LEVENSTHEIN}
             -- mode 1 for hp-ho
             -- mode 2 for hp-b
             -- mode 3 for ho-b
             -- mode 4 for b-b
+            -------------------------------------
         """))
     
     
@@ -96,7 +104,7 @@ class RecordLinker():
 
 
     def find_links_reference(self, reference):
-        if reference.Index % 100 == 0:
+        if reference.Index % 1000 == 0:
             print(reference.year, reference.Index, len(self.links_certs))
 
         # Get period where a match can happen
@@ -158,7 +166,7 @@ class RecordLinker():
             with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
                 for df_reference_batch in pool.imap_unordered(self.find_links_batch, df_references_batched):
 
-                    print(re.sub(' +', f"""
+                    print(re.sub(" +", " ", f"""
                         -------------------------------------
                         Batch has been processed
                         Certificates in batch: {len(df_reference_batch.index)}
@@ -168,7 +176,7 @@ class RecordLinker():
             for reference in df_references.itertuples():
                 self.find_links_reference(reference)
 
-        print(re.sub(' +', f"""
+        print(re.sub(" +", " ", f"""
             -------------------------------------
             Run took {round(time() - self.start, 2)} seconds
             {len(self.links_certs)} links found!
@@ -210,9 +218,9 @@ class RecordLinker():
         """))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    linker.find_links(1)
-    linker.save_links()
+    # linker.find_links(1, True)
+    # linker.save_links()
 
