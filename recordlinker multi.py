@@ -42,10 +42,10 @@ class RecordLinker():
         self.links_certs = []
         self.year_indexes = {}
 
-        # self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
+        self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
 
         print("""
-                    /)
+                     /)
             /\___/\ ((
             \`@_@'/  ))
             {_:Y:.}_//""" +  re.sub(" +", " ", f"""
@@ -104,8 +104,10 @@ class RecordLinker():
 
 
     def find_links_reference(self, reference):
-        if reference.Index % 1000 == 0:
-            print(reference.year, reference.Index, len(self.links_certs))
+        links_certs = []
+        links_persons = []
+        # if reference.Index % 1000 == 0:
+        #     print(reference.year, reference.Index, len(self.links_certs))
 
         # Get period where a match can happen
         period_relative = self.get_period(reference.woman_age)
@@ -130,7 +132,7 @@ class RecordLinker():
             distance = Levenshtein.distance(reference.man + " " + reference.woman, potential_link.man + " " + potential_link.woman)
             
             if distance <= MAX_LEVENSTHEIN:
-                self.links_certs.append([
+                links_certs.append([
                     self.mode,
                     reference.uuid,
                     potential_link.uuid,
@@ -143,14 +145,21 @@ class RecordLinker():
                     len(potential_link.man + " " + potential_link.woman),
                     potential_link.year - reference.year])
 
-                self.links_persons.append([self.mode, reference.man_uuid, potential_link.man_uuid, "m"])
-                self.links_persons.append([self.mode, reference.woman_uuid, potential_link.woman_uuid, "v"])
+                links_persons.append([self.mode, reference.man_uuid, potential_link.man_uuid, "m"])
+                links_persons.append([self.mode, reference.woman_uuid, potential_link.woman_uuid, "v"])
+        return links_certs, links_persons
 
 
-    def find_links_batch(self, df_reference_batch:pd.DataFrame):
-        for reference in df_reference_batch.itertuples():
-            self.find_links_reference(reference)
-        return df_reference_batch
+    def find_links_batch(self, df_references_batch:pd.DataFrame):
+        links_certs_batch =  []
+        links_persons_batch = []
+
+        for reference in df_references_batch.itertuples():
+            links_certs, links_persons = self.find_links_reference(reference)
+            links_certs_batch += links_certs
+            links_persons_batch += links_persons
+
+        return df_references_batch, links_certs_batch, links_persons_batch
 
 
     def find_links(self, mode, cpu_boost=False):
@@ -162,19 +171,25 @@ class RecordLinker():
         
         if cpu_boost:
             df_references_batched = np.array_split(df_references, multiprocessing.cpu_count() * 2)
+            print(len(df_references_batched))
 
             with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
-                for df_reference_batch in pool.imap_unordered(self.find_links_batch, df_references_batched):
+                for df_references_batch, links_certs_batch, links_persons_batch in pool.imap_unordered(self.find_links_batch, df_references_batched):
+                    self.links_certs += links_certs_batch
+                    self.links_persons += links_persons_batch
 
                     print(re.sub(" +", " ", f"""
                         -------------------------------------
                         Batch has been processed
-                        Certificates in batch: {len(df_reference_batch.index)}
+                        Certificates in batch: {len(df_references_batch.index)}
+                        Links in batch: {len(links_certs_batch)}
                         Total amount of links: {len(self.links_certs)}
                     """))
         else:
             for reference in df_references.itertuples():
-                self.find_links_reference(reference)
+                links_certs, links_persons = self.find_links_reference(reference)
+                self.links_certs += links_certs
+                self.links_persons += links_persons
 
         print(re.sub(" +", " ", f"""
             -------------------------------------
@@ -205,14 +220,14 @@ class RecordLinker():
         
         path_result_certs = unique_file_name(f"results\\Links Certs RecordLinker", "csv")
         df_links_certs.to_csv(path_result_certs, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-        print(re.sub(' +', f"""
+        print(re.sub(" +", " ", f"""
             -------------------------------------
             Saved person link at {path_result_certs}
         """))
 
         path_result_persons = unique_file_name(f"results\\Links Persons RecordLinker", "csv")
         df_links_persons.to_csv(path_result_persons, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-        print(re.sub(' +', f"""
+        print(re.sub(" +", " ", f"""
             -------------------------------------
             Saved person link at {path_result_persons}
         """))
@@ -221,6 +236,6 @@ class RecordLinker():
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    # linker.find_links(1, True)
-    # linker.save_links()
+    linker.find_links(4, True)
+    linker.save_links()
 
