@@ -64,6 +64,7 @@ class RecordLinker():
     def get_period(self, age=0):
         start = None
         end = None
+        
         if self.mode == 1:
             start = AGE_MOTHER_RANGE["min"]
             end = AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"] - AGE_MOTHER_RANGE["min"]

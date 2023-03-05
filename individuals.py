@@ -145,7 +145,7 @@ def construct_person_links_births():
     # df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-def unique_individuals():
+def unique_individuals_bl():
     df_links_marriages = pd.read_csv("data\\results\\links h persons.csv", sep=";")
     df_links_births = pd.read_csv("data\\results\\links b persons.csv", sep=",")
 
@@ -185,7 +185,53 @@ def unique_individuals():
     df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-# unique_individuals()
+def unique_individuals_rl():
+    df_links_persons = pd.DataFrame()
+    for i in range(4):
+        df_links_persons = pd.concat([df_links_persons, pd.read_csv(f"results\\{i + 1}\\Links Persons RecordLinker.csv", sep=";")])
+
+    print(df_links_persons)
+
+
+
+
+    unique_individuals = []
+    unique_person_id = 0
+
+    for link_1 in df_links_persons.itertuples():
+        if link_1.reference_uuid in [individual[0] for individual in unique_individuals]:
+            continue
+
+        parents = df_links_persons[df_links_persons["role"] == 1].loc[df_links_persons['parent_id'] == link_1.parent_id]
+        partners = df_links_persons.loc[df_links_marriages['partner_id'] == link_marriage.partner_id]
+
+        for parent in parents.itertuples():
+            unique_individuals.append([parent.partner_id, unique_person_id, "partner"])
+
+        references = set()
+        for partner in partners.itertuples():
+            unique_individuals.append([partner.parent_id, unique_person_id, "parent"])
+            # check births
+            parents_birth = df_links_births.loc[df_links_births['partners_id'] == partner.partner_id]
+            for parent_birth in parents_birth.itertuples():
+                references.add(parent_birth.parent_id)
+
+        for reference in references:
+            unique_individuals.append([reference, unique_person_id, "parent birth"])
+    
+        unique_person_id += 1
+
+        if unique_person_id % 1000 == 0:
+            print(unique_person_id)
+
+        if unique_person_id == 100:
+            break
+    
+    df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role"])
+    df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+unique_individuals_rl()
 
 
 def process_unique_timeline(uuid):
@@ -253,5 +299,5 @@ def process_unique_timeline(uuid):
 
     moments.to_csv(unique_file_name("moments", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
-process_unique_timeline("462f94b1-8751-71f7-17a3-3a23a7192477")
+# process_unique_timeline("462f94b1-8751-71f7-17a3-3a23a7192477")
 
