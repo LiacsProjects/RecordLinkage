@@ -1,10 +1,7 @@
-# https://stackoverflow.com/questions/57512155/how-to-draw-a-tree-more-beautifully-in-networkx
-
 import Levenshtein
 import csv
 import os
 import pandas as pd
-from datetime import datetime
 
 FORMAT = "svg"
 DPI = 300
@@ -95,54 +92,8 @@ def construct_person_links_births():
         person_links.append([father, groom, "m"])
         person_links.append([mother, bride, "v"])
 
-    df_person_links = pd.DataFrame(person_links, columns=["parent_id", "partners_id", "sex"])
+    df_person_links = pd.DataFrame(person_links, columns=["parent_id", "partner_id", "sex"])
     df_person_links.to_csv("data\\links b persons.csv", sep=",", index=False, quoting=csv.QUOTE_NONNUMERIC)
-
-
-    # df_marriages = pd.read_csv("data\\burgerLinker\\Marriages\\registrations.csv", sep=";", dtype="string")
-    # df_births = pd.read_csv("data\\burgerLinker\\Births\\registrations.csv", sep=";", dtype="string")
-    # df_links = pd.read_csv("data\\links b.csv", sep=",")
-    # df_marriages = pd.read_csv("data\\burgerLinker\\Marriages\\persons.csv", sep=";", dtype="string")
-    # df_births = pd.read_csv("data\\burgerLinker\\Births\\persons.csv", sep=";", dtype="string")
-
-    # links_uuid = []
-    # for link in df_links.itertuples():
-    #     # print(link)
-    #     # link.id_certificate_newbornParents
-    #     # link.id_certificate_partners
-    #     try:
-    #         marriage_uuid = df_marriages.at[link.id_certificate_partners - 1, "registration_seq"]
-    #         birth_uuid = df_births.at[link.id_certificate_newbornParents - 1_000_001, "registration_seq"]
-
-    #         links_uuid.append([birth_uuid, marriage_uuid])
-    #     exc
-
-        # father = (int(link.id_certificate_newbornParents) - 1_000_000 - 1) * 3 + 2
-        # mother = (int(link.id_certificate_newbornParents) - 1_000_000 - 1) * 3 + 1
-        
-
-        # print(link.id_certificate_newbornParents)
-        # print(father, mother)
-
-        # groom = (int(link.id_certificate_partners) - 1) * 6 + 3
-        # bride = (int(link.id_certificate_partners) - 1) * 6
-        
-        # print(link.id_certificate_partners)
-        # print(groom, bride)
-
-        # father = df_births.at[father, "firstname"] + df_births.at[father, "familyname"]
-        # mother = df_births.at[mother, "firstname"] + df_births.at[mother, "familyname"]
-
-        # print(father, mother)
-
-        # groom = df_marriages.at[groom, "firstname"] + df_marriages.at[groom, "familyname"]
-        # bride = df_marriages.at[bride, "firstname"] + df_marriages.at[bride, "familyname"]
-
-        # print(groom, bride)
-    #     break
-
-    # df_clean_matches = pd.DataFrame(links_uuid, columns=["parents_id", "partners_id"])
-    # df_clean_matches.to_csv("clean matches.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 def unique_individuals_bl():

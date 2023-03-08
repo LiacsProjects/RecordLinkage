@@ -2,7 +2,7 @@ import pandas as pd
 import csv
 import os
 
-WHITELIST = set("abcdefghijklmnopqrstuvwxyz ")
+WHITELIST = set("abcdefghijklmnopqrstuvwxyz")
 
 
 def unique_file_name(path, extension = ""):
@@ -79,7 +79,6 @@ class GeneratePairs():
                     self.exceptions.append(pair_id + [e])
 
 
-
     def pairs_birth(self):
         self.processed_before = len(self.pairs) - self.processed_before
 
@@ -129,7 +128,7 @@ class GeneratePairs():
         self.pairs_birth()
 
         print(f"""
-        Pairs birth processed. Total: {len(self.pairs - self.processed_before)}
+        Pairs birth processed. Total: {len(self.pairs) - self.processed_before}
         ---------------------------------------
 
         """)
@@ -164,8 +163,10 @@ class GeneratePairs():
 
 
     def get_name_first_letter(self, person_id, type):
-        first_name, prefix, last_name = self.get_name(person_id, type)
-        name = " ".join([name for name in [first_name, prefix, last_name] if isinstance(name, str)])
+        # first_name, prefix, last_name = self.get_name(person_id, type)
+        first_name, last_name = self.get_name(person_id, type)
+        # name = " ".join([name for name in [first_name, prefix, last_name] if isinstance(name, str)])
+        name = first_name + last_name
         first_letter = last_name[0]
         return name, first_letter
 
@@ -182,10 +183,11 @@ class GeneratePairs():
             df_persons = self.df_persons_birth
 
         first_name = clean(df_persons.at[person_id, "voornaam"])
-        prefix = clean(df_persons.at[person_id, "tussenvoegsel"])
+        # prefix = clean(df_persons.at[person_id, "tussenvoegsel"])
         last_name = clean(df_persons.at[person_id, "geslachtsnaam"])
 
-        return first_name, prefix, last_name
+        # return first_name, prefix, last_name
+        return first_name, last_name
 
 
 if __name__ == '__main__':

@@ -8,7 +8,6 @@ import multiprocessing
 import re
 
 
-WHITELIST = set("abcdefghijklmnopqrstuvwxyz ")
 MAX_LEVENSTHEIN = 3
 
 AGE_MARRIED_RANGE = {"min": 15,
@@ -99,7 +98,7 @@ class RecordLinker():
         for potential_link in MODES[mode]["potential_links"]:
             potential_links.append(self.df_pairs[self.df_pairs["role"] == potential_link])
 
-        df_references = pd.concat(references).sort_values(by=["year"]).reset_index(drop=True)
+        df_references = pd.concat(references)
         df_potential_links = pd.concat(potential_links).sort_values(by=["year"]).reset_index(drop=True)
         return df_references, df_potential_links
 
@@ -111,7 +110,7 @@ class RecordLinker():
         #     print(reference.year, reference.Index, len(self.links_certs))
 
         # Get period where a match can happen
-        period_relative = self.get_period(reference.woman_age)
+        period_relative = self.get_period()
         period = {"start": max(1811, min(1950, reference.year + period_relative["start"])), "end": max(1811, min(1950, reference.year + period_relative["end"]))}
 
         # Get index of year range
@@ -125,9 +124,6 @@ class RecordLinker():
             # Voor b-b moet er iets bedacht worden om aantal links te verkleinen
             if self.mode == 4:
                 if potential_link.uuid == reference.uuid:
-                    continue
-                
-                if [self.mode, potential_link.man_uuid, reference.man_uuid, "m"] in self.links_persons:
                     continue
 
             distance = Levenshtein.distance(reference.man + " " + reference.woman, potential_link.man + " " + potential_link.woman)
@@ -237,6 +233,9 @@ class RecordLinker():
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    linker.find_links(4, True)
+    linker.find_links(1, True)
+    # linker.find_links(2, True)
+    # linker.find_links(3, True)
+    # linker.find_links(4, True)
     linker.save_links()
 
