@@ -3,9 +3,13 @@ import csv
 import os
 import pandas as pd
 
-FORMAT = "svg"
-DPI = 300
 
+MODES = {
+    1: {"references": [1], "potential_links": [2, 3]},
+    2: {"references": [1], "potential_links": [4]},
+    3: {"references": [2, 3], "potential_links": [4]},
+    4: {"references": [4], "potential_links": [4]},
+}
 
 def unique_file_name(path, extension = ""):
     i = 0
@@ -137,49 +141,54 @@ def unique_individuals_bl():
 
 
 def unique_individuals_rl():
-    df_links_persons = pd.DataFrame()
-    for i in range(4):
-        df_links_persons = pd.concat([df_links_persons, pd.read_csv(f"results\\{i + 1}\\Links Persons RecordLinker.csv", sep=";")])
 
-    print(df_links_persons)
+    def get_references(df_links:pd.DataFrame, uuid, links):
+        for reference in df_links[df_links["reference_uuid"] == uuid].itertuples():
+            if reference.link_uuid not in [link[0] for link in links]:
+                role = MODES[reference.mode]["potential_links"]
+                links.append([reference.link_uuid, role])
+                # print("refer", reference.link_uuid)
 
+                links = get_references(df_links, reference.link_uuid, links)
 
+        for link in df_links[df_links["link_uuid"] == uuid].itertuples():
+            if link.reference_uuid not in [link[0] for link in links]:
+                role = MODES[link.mode]["references"]
+                links.append([link.reference_uuid, role])
+                # print("link", link.reference_uuid)
+
+                links = get_references(df_links, link.reference_uuid, links)
+
+        return links
+            
+
+    df_links = pd.read_csv("results\\recordLinker\\RL Links Persons.csv", sep=";")
 
 
     unique_individuals = []
     unique_person_id = 0
-
-    for link_1 in df_links_persons.itertuples():
-        if link_1.reference_uuid in [individual[0] for individual in unique_individuals]:
+    # for link_person in df_links[df_links["reference_uuid"] == "d96541a8-717d-6f6e-013d-99efd43705ad"].itertuples():
+    for link_person in df_links.itertuples():
+        if link_person.link_uuid in [individual[0] for individual in unique_individuals]:
             continue
 
-        parents = df_links_persons[df_links_persons["role"] == 1].loc[df_links_persons['parent_id'] == link_1.parent_id]
-        partners = df_links_persons.loc[df_links_marriages['partner_id'] == link_marriage.partner_id]
+        links = get_references(df_links, link_person.link_uuid, [[link_person.link_uuid, MODES[link_person.mode]["potential_links"]]])
 
-        for parent in parents.itertuples():
-            unique_individuals.append([parent.partner_id, unique_person_id, "partner"])
+        for link in links:
+            uuid = link[0]
+            role = link[1]
+            unique_individuals.append([uuid, unique_person_id, role])
 
-        references = set()
-        for partner in partners.itertuples():
-            unique_individuals.append([partner.parent_id, unique_person_id, "parent"])
-            # check births
-            parents_birth = df_links_births.loc[df_links_births['partners_id'] == partner.partner_id]
-            for parent_birth in parents_birth.itertuples():
-                references.add(parent_birth.parent_id)
-
-        for reference in references:
-            unique_individuals.append([reference, unique_person_id, "parent birth"])
-    
         unique_person_id += 1
 
-        if unique_person_id % 1000 == 0:
+        if unique_person_id % 10 == 0:
             print(unique_person_id)
 
         if unique_person_id == 100:
             break
     
     df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role"])
-    df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_unique_individuals.to_csv(unique_file_name("unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 unique_individuals_rl()
