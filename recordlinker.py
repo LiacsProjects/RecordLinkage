@@ -173,7 +173,7 @@ class RecordLinker():
 
                 # Link childeren in match
                 try:
-                    if self.mode == 3 or self.mode == 5:
+                    if self.mode == 3 or self.mode == 5 or self.mode == 6:
                         if len(reference.child_uuid) > 0 and len(potential_link.child_uuid) > 0:
                             distance = Levenshtein.distance(reference.child, potential_link.child)
 
@@ -259,14 +259,14 @@ class RecordLinker():
         df_links_certs.to_csv(path_result_certs, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
         print(re.sub(" +", " ", f"""
             -------------------------------------
-            Saved person link at {path_result_certs}
+            Saved cert links at {path_result_certs}
         """))
 
         path_result_persons = unique_file_name(f"results\\Links Persons RecordLinker", "csv")
         df_links_persons.to_csv(path_result_persons, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
         print(re.sub(" +", " ", f"""
             -------------------------------------
-            Saved person link at {path_result_persons}
+            Saved person links at {path_result_persons}
         """))
 
 
@@ -278,5 +278,6 @@ if __name__ == "__main__":
     # linker.find_links(3, True)
     # linker.find_links(4, True)
     linker.find_links(5, True)
+    # linker.find_links(6, True)
     linker.save_links()
 

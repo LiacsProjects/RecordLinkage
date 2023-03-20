@@ -200,34 +200,47 @@ class GeneratePairs():
             except Exception as e:
                 self.exceptions.append([4, registration_death[INDEX_DECEASED_FATHER], registration_death[INDEX_DECEASED_MOTHER], registration_death[INDEX_DECEASED], e])
 
-            # try:
-            #     role = 5
+            try:
+                role = 5
 
-            #     if "|" in registration_death[INDEX_RELATION]:
-            #         continue
+                if "|" in registration_death[INDEX_RELATION]:
+                    continue
+
+
+                deceased, deceased_letter = self.get_name2(registration_death[INDEX_DECEASED + 9], registration_death[INDEX_DECEASED + 11]) 
+                relation1, letter_relation = self.get_name2(registration_death[INDEX_RELATION + 9], registration_death[INDEX_RELATION + 11])
+                relation1 = {
+                    "name": relation1,
+                    "letter": letter_relation,
+                    "age": 0,
+                    "uuid": registration_death[INDEX_RELATION]
+                }
+                    
+                    
+                relations = [relation1]
+
+                for relation in relations:
+
+                    pair = [year,
+                            deceased_letter + relation["letter"], 
+                            role, 
+                            deceased, 
+                            relation["name"], 
+                            relation["age"],
+                            "", 
+                            0, 
+                            registration_death.uuid, 
+                            deceased_uuid, 
+                            relation["uuid"],
+                            ""]
+                    
+                    self.pairs.append(pair)
 
 
 
-            #     woman, letter_woman = self.get_name2(mother_id, "birth")
-
-            #     pair = [year,
-            #             letter_man + letter_woman, 
-            #             role, 
-            #             man, 
-            #             woman, 
-            #             0,
-            #             None, 
-            #             0, 
-            #             registration_birth.uuid, 
-            #             self.df_persons_birth.at[father_id, "uuid"], 
-            #             self.df_persons_birth.at[mother_id, "uuid"],
-            #             None]
-                
-            #     self.pairs.append(pair)
-
-            # except Exception as e:
-            #     # print("Exception", [4, father_id, mother_id, child_id], e)
-            #     self.exceptions.append([4, father_id, mother_id, child_id, e])
+            except Exception as e:
+                # print("Exception", [4, father_id, mother_id, child_id], e)
+                self.exceptions.append([4, father_id, mother_id, child_id, e])
 
 
     def construct_pairs(self):
