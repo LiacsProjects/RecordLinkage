@@ -4,7 +4,7 @@ import csv
 
 def set_comparison():
 
-    df_links_rl = pd.read_csv("results\\Links Persons RecordLinker.csv", sep=";")
+    df_links_rl = pd.read_csv("results\\Links Persons RecordLinker (2).csv", sep=";")
     df_links_rl = df_links_rl[df_links_rl["mode"] != 4]
     df_links_rl = df_links_rl[df_links_rl["mode"] != 3]
 

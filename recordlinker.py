@@ -11,16 +11,21 @@ import re
 MAX_LEVENSTHEIN = 3
 
 AGE_MARRIED_RANGE = {"min": 15,
-                     "max": 70}
+                     "max": 80}
 
 AGE_MOTHER_RANGE = {"min": 15,
-                    "max": 45}
+                    "max": 50}
+
+AGE_DEATH_RANGE = {"min": 0,
+                    "max": 100}
 
 MODES = {
     1: {"references": [1], "potential_links": [2, 3]},
     2: {"references": [1], "potential_links": [4]},
     3: {"references": [2, 3], "potential_links": [4]},
     4: {"references": [4], "potential_links": [4]},
+    5: {"references": [2,3], "potential_links": [6]},
+    6: {"references": [4], "potential_links": [6]}
 }
 
 
@@ -41,7 +46,7 @@ class RecordLinker():
         self.links_certs = []
         self.year_indexes = {}
 
-        self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
+        self.df_pairs = pd.read_csv("data\\pairs (6).csv", sep=";")
 
         print("""
                      /)
@@ -56,6 +61,8 @@ class RecordLinker():
             -- mode 2 for hp-b
             -- mode 3 for ho-b
             -- mode 4 for b-b
+            -- mode 5 for ho-d
+            -- mode 6 for b-d
             -------------------------------------
         """))
     
@@ -66,25 +73,36 @@ class RecordLinker():
         
         if self.mode == 1:
             start = AGE_MOTHER_RANGE["min"]
-            end = AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"] - AGE_MOTHER_RANGE["min"]
+            end = AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"] - AGE_MARRIED_RANGE["min"]
             if age > 14:
-                start = AGE_MOTHER_RANGE["min"]
                 end = AGE_MOTHER_RANGE["max"] - age + AGE_MARRIED_RANGE["max"]
         
         elif self.mode == 2:
             start = max(0, AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"])
             end = AGE_MOTHER_RANGE["max"] - AGE_MOTHER_RANGE["min"]
-            if age != None:
-                start = max(0, AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"])
+            if age != 0:
                 end = AGE_MOTHER_RANGE["max"] - age
         
         elif self.mode == 3:
             start = AGE_MOTHER_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"])
-            end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MOTHER_RANGE["min"])
-        
+            end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MARRIED_RANGE["min"])
+            if age != 0:
+                start = AGE_MOTHER_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + age)
+                end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + age)
+
         elif self.mode == 4:
             start = AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"]
             end = AGE_MOTHER_RANGE["max"] - AGE_MOTHER_RANGE["min"]
+        
+        elif self.mode == 5:
+            start = AGE_MOTHER_RANGE["min"] + AGE_DEATH_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"])
+            end = AGE_MOTHER_RANGE["max"] + AGE_DEATH_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MARRIED_RANGE["min"])
+            if age != 0:
+                start = AGE_MOTHER_RANGE["min"] + AGE_DEATH_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + age)
+                end = AGE_MOTHER_RANGE["max"] + AGE_DEATH_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + age)
+                
+        elif self.mode == 6:
+            pass
         
         return {"start": start, "end": end}
 
@@ -109,8 +127,15 @@ class RecordLinker():
         # if reference.Index % 1000 == 0:
         #     print(reference.year, reference.Index, len(self.links_certs))
 
+        # Get the age to narrow down potential matches
+        reference_age = 0
+        if self.mode == 1 or self.mode == 2:
+            reference_age = reference.woman_age
+        elif self.mode == 3:
+            reference_age = reference.child_age
+
         # Get period where a match can happen
-        period_relative = self.get_period()
+        period_relative = self.get_period(reference_age)
         period = {"start": max(1811, min(1950, reference.year + period_relative["start"])), "end": max(1811, min(1950, reference.year + period_relative["end"]))}
 
         # Get index of year range
@@ -120,6 +145,7 @@ class RecordLinker():
         df_potential_links_filtered = self.df_potential_links.iloc[period_index["start"]:period_index["end"]]
         df_potential_links_filtered = df_potential_links_filtered[df_potential_links_filtered["first_letters"] == reference.first_letters]
 
+        # Search all potential links for matching names
         for potential_link in df_potential_links_filtered.itertuples():
             # Voor b-b moet er iets bedacht worden om aantal links te verkleinen
             if self.mode == 4:
@@ -144,6 +170,21 @@ class RecordLinker():
 
                 links_persons.append([self.mode, reference.man_uuid, potential_link.man_uuid, "m"])
                 links_persons.append([self.mode, reference.woman_uuid, potential_link.woman_uuid, "v"])
+
+                # Link childeren in match
+                try:
+                    if self.mode == 3 or self.mode == 5:
+                        if len(reference.child_uuid) > 0 and len(potential_link.child_uuid) > 0:
+                            distance = Levenshtein.distance(reference.child, potential_link.child)
+
+                            if distance <= MAX_LEVENSTHEIN:
+                                sex = "mc"
+                                if reference.role == 3:
+                                    sex = "vc"
+                                links_persons.append([self.mode, reference.child_uuid, potential_link.child_uuid, sex])
+                except:
+                    pass
+
         return links_certs, links_persons
 
 
@@ -168,7 +209,6 @@ class RecordLinker():
         
         if cpu_boost:
             df_references_batched = np.array_split(df_references, multiprocessing.cpu_count() * 2)
-            print(len(df_references_batched))
 
             with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
                 for df_references_batch, links_certs_batch, links_persons_batch in pool.imap_unordered(self.find_links_batch, df_references_batched):
@@ -233,9 +273,10 @@ class RecordLinker():
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    linker.find_links(1, True)
+    # linker.find_links(1, True)
     # linker.find_links(2, True)
     # linker.find_links(3, True)
     # linker.find_links(4, True)
+    linker.find_links(5, True)
     linker.save_links()
 

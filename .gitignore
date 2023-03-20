@@ -8,5 +8,5 @@ results/recordLinker/
 data/processed/
 data/unprocessed/
 data/burgerLinker/
+data/pairs/
 data/pairs.csv
-data/pairs oud.csv
