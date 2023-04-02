@@ -25,8 +25,8 @@ class GeneratePairs():
         # Read files
         self.df_registrations_marriage = pd.read_csv("data\\Marriages\\marriages.csv", sep=";")
         self.df_persons_marriage = pd.read_csv("data\\Marriages\\persons.csv", sep=";")
-        # self.df_registrations_birth = pd.read_csv("data\\Births\\births.csv", sep=";")
-        # self.df_persons_birth = pd.read_csv("data\\Births\\persons.csv", sep=";")
+        self.df_registrations_birth = pd.read_csv("data\\Births\\births.csv", sep=";")
+        self.df_persons_birth = pd.read_csv("data\\Births\\persons.csv", sep=";")
         self.df_deaths = pd.read_csv("data\\unprocessed\\Overlijden.csv", sep=";", dtype="string")
 
         self.exceptions = []
@@ -62,9 +62,9 @@ class GeneratePairs():
             if len(age) > 0:
                 return int(age)
             else:
-                return 0
+                return -1
         except Exception as e:
-            return 0
+            return -1
         
 
     def pairs_marriage(self):
@@ -85,35 +85,37 @@ class GeneratePairs():
             for pair_id in pairs_id:
                 try:
                     role = pair_id[0]
-                    child = None
-                    child_age = 0
-                    child_uuid = None
+                    child = ""
+                    child_uuid = ""
 
                     man, letter_man = self.get_name(pair_id[1], "marriage")
                     woman, letter_woman = self.get_name(pair_id[2], "marriage")
 
                     father_uuid = self.df_persons_marriage.at[pair_id[1], "uuid"]
                     mother_uuid = self.df_persons_marriage.at[pair_id[2], "uuid"]
-
-                    if role != 1:
-                        child, _ = self.get_name(pair_id[3], "marriage")
-                        child_age = int(str(self.df_persons_marriage.at[pair_id[3], "leeftijd"])[:2])
-                        child_uuid = self.df_persons_marriage.at[pair_id[3], "uuid"]
                     
+                    if role == 1:
+                        age = int(str(self.df_persons_marriage.at[pair_id[2], "leeftijd"])[:2])
+                        
+                    else:
+                        child, _ = self.get_name(pair_id[3], "marriage")
+                        age = int(str(self.df_persons_marriage.at[pair_id[3], "leeftijd"])[:2])
+                        child_uuid = self.df_persons_marriage.at[pair_id[3], "uuid"]
+
                     pair = [year,
                             letter_man + letter_woman,
                             role,
                             man,
-                            woman,
-                            int(str(self.df_persons_marriage.at[pair_id[2], "leeftijd"])[:2]),
+                            woman, 
                             child,
-                            child_age,
+                            age,
                             registration_marriage.uuid,
                             father_uuid,
                             mother_uuid,
                             child_uuid]
                     
                     self.pairs.append(pair)
+
                 except Exception as e:
                     # print("Exception", pair_id, e)
                     self.exceptions.append(pair_id + [e])
@@ -141,9 +143,8 @@ class GeneratePairs():
                         role, 
                         man, 
                         woman, 
-                        0,
                         child, 
-                        0, 
+                        -1, 
                         registration_birth.uuid, 
                         self.df_persons_birth.at[father_id, "uuid"], 
                         self.df_persons_birth.at[mother_id, "uuid"],
@@ -152,7 +153,6 @@ class GeneratePairs():
                 self.pairs.append(pair)
 
             except Exception as e:
-                # print("Exception", [4, father_id, mother_id, child_id], e)
                 self.exceptions.append([4, father_id, mother_id, child_id, e])
 
 
@@ -160,23 +160,24 @@ class GeneratePairs():
         self.processed_before = len(self.pairs) - self.processed_before
 
         for registration_death in self.df_deaths.itertuples():
-
-
             try:
-                # print(registration_death[0])
                 _, _, year = self.get_date(registration_death[INDEX_DECEASED + 14])
 
-                deceased = None
-                deceased_age = 0
-                deceased_uuid = None
+                deceased = ""
+                deceased_age = -1
+                deceased_uuid = ""
 
                 try:
-                    deceased, _ = self.get_name2(registration_death[INDEX_DECEASED + 9], registration_death[INDEX_DECEASED + 11])  
+                    deceased, deceased_letter = self.get_name2(registration_death[INDEX_DECEASED + 9], registration_death[INDEX_DECEASED + 11])  
                     deceased_age = self.get_age(registration_death[INDEX_DECEASED + 12])
                     deceased_uuid = registration_death[INDEX_DECEASED]
+
                 except:
-                    pass     
+                    pass
+            except Exception as e:
+                continue   
             
+            try:
                 role = 6
 
                 man, letter_man = self.get_name2(registration_death[INDEX_DECEASED_FATHER + 9], registration_death[INDEX_DECEASED_FATHER + 11])
@@ -187,7 +188,6 @@ class GeneratePairs():
                         role, 
                         man, 
                         woman, 
-                        0,
                         deceased, 
                         deceased_age, 
                         registration_death.uuid, 
@@ -202,49 +202,64 @@ class GeneratePairs():
 
             try:
                 role = 5
+                relations = []
 
                 if "|" in registration_death[INDEX_RELATION]:
-                    continue
+                    for index, relation in enumerate(registration_death[INDEX_RELATION].split("|")):
+                        relation, letter_relation = self.get_name2(registration_death[INDEX_RELATION + 9].split("|")[index], registration_death[INDEX_RELATION + 11].split("|")[index])
+                        relation = {
+                            "name": relation,
+                            "letter": letter_relation,
+                            "age": -1,
+                            "uuid": registration_death[INDEX_RELATION].split("|")[index]
+                        }
+                        relations.append(relation)
 
-
-                deceased, deceased_letter = self.get_name2(registration_death[INDEX_DECEASED + 9], registration_death[INDEX_DECEASED + 11]) 
-                relation1, letter_relation = self.get_name2(registration_death[INDEX_RELATION + 9], registration_death[INDEX_RELATION + 11])
-                relation1 = {
-                    "name": relation1,
-                    "letter": letter_relation,
-                    "age": 0,
-                    "uuid": registration_death[INDEX_RELATION]
-                }
-                    
-                    
-                relations = [relation1]
+                else:
+                    relation, letter_relation = self.get_name2(registration_death[INDEX_RELATION + 9], registration_death[INDEX_RELATION + 11])
+                    relation = {
+                        "name": relation,
+                        "letter": letter_relation,
+                        "age": -1,
+                        "uuid": registration_death[INDEX_RELATION]
+                    }
+                    relations.append(relation)                
 
                 for relation in relations:
-
                     pair = [year,
                             deceased_letter + relation["letter"], 
                             role, 
                             deceased, 
                             relation["name"], 
-                            relation["age"],
                             "", 
-                            0, 
+                            relation["age"], 
                             registration_death.uuid, 
-                            deceased_uuid, 
+                            registration_death[INDEX_DECEASED], 
                             relation["uuid"],
                             ""]
                     
                     self.pairs.append(pair)
 
-
+                    pair = [year, 
+                            relation["letter"] + deceased_letter, 
+                            role, 
+                            relation["name"], 
+                            deceased, 
+                            "", 
+                            deceased_age, 
+                            registration_death.uuid, 
+                            relation["uuid"], 
+                            registration_death[INDEX_DECEASED], 
+                            ""] 
+                    
+                    self.pairs.append(pair)
 
             except Exception as e:
-                # print("Exception", [4, father_id, mother_id, child_id], e)
-                self.exceptions.append([4, father_id, mother_id, child_id, e])
+                self.exceptions.append([4, registration_death[INDEX_DECEASED], registration_death[INDEX_RELATION], "", e])
 
 
     def construct_pairs(self):
-        # self.pairs_birth()
+        self.pairs_birth()
 
         print(f"""
         Pairs birth processed. Total: {len(self.pairs) - self.processed_before}
@@ -275,9 +290,8 @@ class GeneratePairs():
             "role",  
             "man", 
             "woman", 
-            "woman_age",
             "child", 
-            "child_age", 
+            "age", 
             "uuid", 
             "man_uuid",
             "woman_uuid",
@@ -291,7 +305,7 @@ class GeneratePairs():
             "exception"])
         
         # df_links['first_letters'].value_counts().to_csv("distr.csv", sep=";", quoting=csv.QUOTE_NONNUMERIC)
-        # df_exceptions.to_csv(unique_file_name("data\\exceptions", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        df_exceptions.to_csv(unique_file_name("data\\exceptions", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
         df_pairs.to_csv(unique_file_name("data\\pairs", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
         print("All pairs processed. Total:", len(df_pairs.index))

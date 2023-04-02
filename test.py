@@ -68,11 +68,15 @@ def get_period(mode, age=0):
 
 
 
-print(get_period(1, 25))
-print(get_period(2, 25))
-print(get_period(3, 25))
-print(get_period(4, 25))
-print(get_period(5, 25))
+# print(get_period(1, 25))
+# print(get_period(2, 25))
+# print(get_period(3, 25))
+# print(get_period(4, 25))
+# print(get_period(5, 25))
+
+
+
+print(10_000_000)
 
 
 

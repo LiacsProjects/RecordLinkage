@@ -64,18 +64,18 @@ def get_clean_string(string):
     return str(string).replace("<NA>", "").lower().replace("ch", "g").replace("c", "k").replace("z", "s").replace("ph", "f").replace("ij", "y").replace("\\", "").strip()
 
 
-def generate_persons():
-    df_geboortes = pd.read_csv(r'data\unprocessed\Geboorte.csv', sep=";", dtype="string")
+def generate_persons_births():
+    df_registrations = pd.read_csv(r'data\unprocessed\Geboorte.csv', sep=";", dtype="string")
 
-    person_id = 1000001
+    person_id = 1_000_001
     persons = []
 
-    registration_id = 1000001
+    registration_id = 1_000_001
     registrations = []
-    for geboorte in df_geboortes.iterrows():
+    for registration in df_registrations.iterrows():
 
         try:
-            registration_day, registration_month, registration_year = get_date(str(geboorte[1]["Kind-Datum geboorte"]).replace("<NA>", "").strip())
+            registration_day, registration_month, registration_year = get_date(str(registration[1]["Kind-Datum geboorte"]).replace("<NA>", "").strip())
             
             registrations.append([
                 registration_id,
@@ -85,26 +85,30 @@ def generate_persons():
                 registration_day,
                 registration_month,
                 registration_year,
-                str(geboorte[1]["uuid"]).strip()])
+                str(registration[1]["uuid"]).strip()])
         
-            try:
-                # Kind
+            try: # Kind
+                person = "Kind"
+
+                if str(registration[1][f"{person}-uuid"]).replace("<NA>", "") == "":
+                    raise Exception("no person")
+                
                 persons.append([
                     person_id,
                     registration_id,
                     1,
-                    get_clean_string(geboorte[1]["Kind-Voornaam"]),
-                    get_clean_string(geboorte[1]["Kind-Tussenvoegsel"]),
-                    get_clean_string(geboorte[1]["Kind-Geslachtsnaam"]),
+                    get_clean_string(registration[1][f"{person}-Voornaam"]),
+                    get_clean_string(registration[1][f"{person}-Tussenvoegsel"]),
+                    get_clean_string(registration[1][f"{person}-Geslachtsnaam"]),
                     None,
                     None,
                     1,
                     None,
-                    None,
-                    None,
-                    None,
                     0,
-                    None,
+                    0,
+                    0,
+                    0,
+                    f"{str(registration_day)}-{str(registration_month)}-{str(registration_year)}",
                     1,
                     registration_day,
                     registration_month,
@@ -122,23 +126,33 @@ def generate_persons():
                     0,
                     0,
                     0,
-                    None
+                    None,
+                    registration[1][f"{person}-uuid"]
                 ])
 
-                person_id +=1
-                age_day, age_week, age_month, age_year = get_age(str(geboorte[1]["Moeder-Leeftijd"]).replace("<NA>", "").lower().strip())
-                # Moeder
+                person_id += 1
+            except:
+                pass
+
+            try: # Moeder
+                person = "Moeder"
+
+                if str(registration[1][f"{person}-uuid"]).replace("<NA>", "") == "":
+                    raise Exception("no person")
+                
+                age_day, age_week, age_month, age_year = get_age(str(registration[1][f"{person}-Leeftijd"]).replace("<NA>", "").lower().strip())
+
                 persons.append([
                     person_id,
                     registration_id,
                     1,
-                    get_clean_string(geboorte[1]["Moeder-Voornaam"]),
-                    get_clean_string(geboorte[1]["Moeder-Tussenvoegsel"]),
-                    get_clean_string(geboorte[1]["Moeder-Geslachtsnaam"]),
+                    get_clean_string(registration[1][f"{person}-Voornaam"]),
+                    get_clean_string(registration[1][f"{person}-Tussenvoegsel"]),
+                    get_clean_string(registration[1][f"{person}-Geslachtsnaam"]),
                     "f",
                     None,
                     2,
-                    get_clean_string(geboorte[1]["Moeder-Beroep"]),
+                    None,
                     age_day,
                     age_week,
                     age_month,
@@ -161,23 +175,33 @@ def generate_persons():
                     0,
                     0,
                     0,
-                    None
+                    None,
+                    registration[1][f"{person}-uuid"]
                 ])
+                
+                person_id += 1
+            except:
+                pass
 
-                person_id +=1            
-                age_day, age_week, age_month, age_year = get_age(str(geboorte[1]["Vader-Leeftijd"]).replace("<NA>", "").lower().strip())
-                # Vader
+            try: # Vader
+                person = "Vader"
+
+                if str(registration[1][f"{person}-uuid"]).replace("<NA>", "") == "":
+                    raise Exception("no person")
+                
+                age_day, age_week, age_month, age_year = get_age(str(registration[1][f"{person}-Leeftijd"]).replace("<NA>", "").lower().strip())
+
                 persons.append([
                     person_id,
                     registration_id,
                     1,
-                    get_clean_string(geboorte[1]["Vader-Voornaam"]),
-                    get_clean_string(geboorte[1]["Vader-Tussenvoegsel"]),
-                    get_clean_string(geboorte[1]["Vader-Geslachtsnaam"]),
+                    get_clean_string(registration[1][f"{person}-Voornaam"]),
+                    get_clean_string(registration[1][f"{person}-Tussenvoegsel"]),
+                    get_clean_string(registration[1][f"{person}-Geslachtsnaam"]),
                     "m",
                     None,
                     3,
-                    get_clean_string(geboorte[1]["Vader-Beroep"]),
+                    None,
                     age_day,
                     age_week,
                     age_month,
@@ -200,16 +224,16 @@ def generate_persons():
                     0,
                     0,
                     0,
-                    None
+                    None,
+                    registration[1][f"{person}-uuid"]
                 ])
-
-                person_id +=1
-
+                
+                person_id += 1
             except:
-                print("Person not added:", geboorte)
+                pass
 
         except Exception as e:
-            print("Registration not added:", geboorte[1]["uuid"], e)
+            print("Registration not added:", registration[1]["uuid"], e)
 
         registration_id += 1
 
@@ -254,11 +278,12 @@ def generate_persons():
                                                 "mar_day",
                                                 "mar_month",
                                                 "mar_year",
-                                                "mar_location"])
+                                                "mar_location",
+                                                "uuid"])
 
-    df_registrations.to_csv(r"data\burgerLinker\registrations b.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    df_persons.to_csv(r"data\burgerLinker\persons b.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_registrations.to_csv(r"data\burgerLinker\input\Births\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv(r"data\burgerLinker\input\Births\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-generate_persons()
+generate_persons_births()
 

@@ -22,10 +22,22 @@ AGE_DEATH_RANGE = {"min": 0,
 MODES = {
     1: {"references": [1], "potential_links": [2, 3]},
     2: {"references": [1], "potential_links": [4]},
+    10: {"references": [1], "potential_links": [5]},
+    11: {"references": [1], "potential_links": [6]}, 
+
+    12: {"references": [2, 3], "potential_links": [2, 3]},
     3: {"references": [2, 3], "potential_links": [4]},
+    13: {"references": [2, 3], "potential_links": [5]},  
+    5: {"references": [2, 3], "potential_links": [6]},
+
     4: {"references": [4], "potential_links": [4]},
-    5: {"references": [2,3], "potential_links": [6]},
-    6: {"references": [4], "potential_links": [6]}
+    14: {"references": [4], "potential_links": [5]},
+    6: {"references": [4], "potential_links": [6]},
+
+    15: {"references": [5], "potential_links": [5]},
+    16: {"references": [5], "potential_links": [6]},
+
+    17: {"references": [6], "potential_links": [6]},
 }
 
 
@@ -68,8 +80,8 @@ class RecordLinker():
     
     
     def get_period(self, age=0):
-        start = None
-        end = None
+        start = -999
+        end = 999
         
         if self.mode == 1:
             start = AGE_MOTHER_RANGE["min"]
@@ -127,15 +139,8 @@ class RecordLinker():
         # if reference.Index % 1000 == 0:
         #     print(reference.year, reference.Index, len(self.links_certs))
 
-        # Get the age to narrow down potential matches
-        reference_age = 0
-        if self.mode == 1 or self.mode == 2:
-            reference_age = reference.woman_age
-        elif self.mode == 3:
-            reference_age = reference.child_age
-
         # Get period where a match can happen
-        period_relative = self.get_period(reference_age)
+        period_relative = self.get_period(reference.age)
         period = {"start": max(1811, min(1950, reference.year + period_relative["start"])), "end": max(1811, min(1950, reference.year + period_relative["end"]))}
 
         # Get index of year range
