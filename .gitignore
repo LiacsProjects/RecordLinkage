@@ -7,7 +7,7 @@ results/recordLinker/
 
 data/processed/
 data/unprocessed/
-data/burgerLinker/
+data/burgerLinker/input/
 data/pairs/
 data/pairs.csv
 data/oud/
