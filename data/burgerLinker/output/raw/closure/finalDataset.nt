@@ -1,0 +1,4 @@
+<https://iisg.amsterdam/id/elo/person/p-1> <http://schema.org/familyName> "dorrepaal".
+<https://iisg.amsterdam/id/elo/person/p-1> <http://schema.org/gender> "f".
+<https://iisg.amsterdam/id/elo/person/p-1> <http://schema.org/givenName> "jansje".
+<https://iisg.amsterdam/id/elo/person/p-1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person>.
