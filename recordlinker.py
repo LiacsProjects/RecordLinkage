@@ -183,9 +183,7 @@ class RecordLinker():
                             distance = Levenshtein.distance(reference.child, potential_link.child)
 
                             if distance <= MAX_LEVENSTHEIN:
-                                sex = "mc"
-                                if reference.role == 3:
-                                    sex = "vc"
+                                sex = "c"
                                 links_persons.append([self.mode, reference.child_uuid, potential_link.child_uuid, sex])
                 except:
                     pass
