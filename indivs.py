@@ -52,10 +52,10 @@ def unique_individuals():
 
 
     def get_edges():
-        dfs = [pd.read_csv("results\\RL Links Persons.csv", sep=";"), 
-            pd.read_csv("results\\RL Links Persons (1).csv", sep=";"), 
-            pd.read_csv("results\\RL Links Persons (2).csv", sep=";"), 
-            pd.read_csv("results\\RL Links Persons (3).csv", sep=";")]
+        dfs = [pd.read_csv("results\\recordLinker\\RL Links Persons.csv", sep=";"), 
+            pd.read_csv("results\\recordLinker\\RL Links Persons (1).csv", sep=";"), 
+            pd.read_csv("results\\recordLinker\\RL Links Persons (2).csv", sep=";"), 
+            pd.read_csv("results\\recordLinker\\RL Links Persons (3).csv", sep=";")]
         
         df_links = pd.concat(dfs).reset_index(drop=True)
         print(df_links)
@@ -68,9 +68,9 @@ def unique_individuals():
 
 
     edges = get_edges()
-    print(len(edges))
+    print("Edges:", len(edges))
     groups = connected_nodes(edges)
-    # print(groups)  # [['a', 'b', 'c'], ['d', 'e']]
+    print("Groups:", len(groups))  # [['a', 'b', 'c'], ['d', 'e']]
 
     identifier = 0
     unique_individuals = []
