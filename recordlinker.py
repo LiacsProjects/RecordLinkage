@@ -20,24 +20,24 @@ AGE_DEATH_RANGE = {"min": 0,
                     "max": 100}
 
 MODES = {
-    1: {"references": [1], "potential_links": [2, 3]},
-    2: {"references": [1], "potential_links": [4]},
-    10: {"references": [1], "potential_links": [5]},
-    11: {"references": [1], "potential_links": [6]}, 
+    1: {"references": [1], "potential_links": [2, 3]}, # 1 
+    2: {"references": [1], "potential_links": [4]}, # 2
+    3: {"references": [1], "potential_links": [5]},
+    4: {"references": [1], "potential_links": [6]}, 
 
-    12: {"references": [2, 3], "potential_links": [2, 3]},
-    3: {"references": [2, 3], "potential_links": [4]},
-    13: {"references": [2, 3], "potential_links": [5]},  
-    5: {"references": [2, 3], "potential_links": [6]},
+    5: {"references": [2, 3], "potential_links": [2, 3]},
+    6: {"references": [2, 3], "potential_links": [4]}, # 3
+    7: {"references": [2, 3], "potential_links": [5]},  
+    8: {"references": [2, 3], "potential_links": [6]}, # 5
 
-    4: {"references": [4], "potential_links": [4]},
-    14: {"references": [4], "potential_links": [5]},
-    6: {"references": [4], "potential_links": [6]},
+    9: {"references": [4], "potential_links": [4]}, # 4
+    10: {"references": [4], "potential_links": [5]},
+    11: {"references": [4], "potential_links": [6]}, # 6
 
-    15: {"references": [5], "potential_links": [5]},
-    16: {"references": [5], "potential_links": [6]},
+    12: {"references": [5], "potential_links": [5]},
+    13: {"references": [5], "potential_links": [6]},
 
-    17: {"references": [6], "potential_links": [6]},
+    14: {"references": [6], "potential_links": [6]},
 }
 
 
@@ -58,7 +58,7 @@ class RecordLinker():
         self.links_certs = []
         self.year_indexes = {}
 
-        self.df_pairs = pd.read_csv("data\\pairs (6).csv", sep=";")
+        self.df_pairs = pd.read_csv("data\\pairs.csv", sep=";")
 
         print("""
                      /)
@@ -95,25 +95,25 @@ class RecordLinker():
             if age != 0:
                 end = AGE_MOTHER_RANGE["max"] - age
         
-        elif self.mode == 3:
+        elif self.mode == 6:
             start = AGE_MOTHER_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"])
             end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MARRIED_RANGE["min"])
             if age != 0:
                 start = AGE_MOTHER_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + age)
                 end = AGE_MOTHER_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + age)
 
-        elif self.mode == 4:
+        elif self.mode == 9:
             start = AGE_MOTHER_RANGE["min"] - AGE_MOTHER_RANGE["max"]
             end = AGE_MOTHER_RANGE["max"] - AGE_MOTHER_RANGE["min"]
         
-        elif self.mode == 5:
+        elif self.mode == 8:
             start = AGE_MOTHER_RANGE["min"] + AGE_DEATH_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + AGE_MARRIED_RANGE["max"])
             end = AGE_MOTHER_RANGE["max"] + AGE_DEATH_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + AGE_MARRIED_RANGE["min"])
             if age != 0:
                 start = AGE_MOTHER_RANGE["min"] + AGE_DEATH_RANGE["min"] - (AGE_MOTHER_RANGE["max"] + age)
                 end = AGE_MOTHER_RANGE["max"] + AGE_DEATH_RANGE["max"] - (AGE_MOTHER_RANGE["min"] + age)
                 
-        elif self.mode == 6:
+        elif self.mode == 11:
             pass
         
         return {"start": start, "end": end}
@@ -152,8 +152,8 @@ class RecordLinker():
 
         # Search all potential links for matching names
         for potential_link in df_potential_links_filtered.itertuples():
-            # Voor b-b moet er iets bedacht worden om aantal links te verkleinen
-            if self.mode == 4:
+            # Voor aantal modes kan er met zichzelf gelinkt worden. Dit wordt hiermee voorkomen
+            if self.mode in [5, 9, 12, 14]:
                 if potential_link.uuid == reference.uuid:
                     continue
 
@@ -178,7 +178,7 @@ class RecordLinker():
 
                 # Link childeren in match
                 try:
-                    if self.mode == 3 or self.mode == 5 or self.mode == 6:
+                    if self.mode in [5, 6, 8, 11]:
                         if len(reference.child_uuid) > 0 and len(potential_link.child_uuid) > 0:
                             distance = Levenshtein.distance(reference.child, potential_link.child)
 
@@ -260,14 +260,14 @@ class RecordLinker():
             "link_uuid", 
             "sex"])
         
-        path_result_certs = unique_file_name(f"results\\Links Certs RecordLinker", "csv")
+        path_result_certs = unique_file_name(f"results\\RL Links Certs", "csv")
         df_links_certs.to_csv(path_result_certs, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
         print(re.sub(" +", " ", f"""
             -------------------------------------
             Saved cert links at {path_result_certs}
         """))
 
-        path_result_persons = unique_file_name(f"results\\Links Persons RecordLinker", "csv")
+        path_result_persons = unique_file_name(f"results\\RL Links Persons", "csv")
         df_links_persons.to_csv(path_result_persons, sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
         print(re.sub(" +", " ", f"""
             -------------------------------------
@@ -282,7 +282,15 @@ if __name__ == "__main__":
     # linker.find_links(2, True)
     # linker.find_links(3, True)
     # linker.find_links(4, True)
-    linker.find_links(5, True)
+    # linker.find_links(5, True)
     # linker.find_links(6, True)
+    # linker.find_links(7, True)
+    # linker.find_links(8, True)
+    # linker.find_links(9, True)
+    # linker.find_links(10, True)
+    # linker.find_links(11, True)
+    linker.find_links(12, True)
+    linker.find_links(13, True)
+    linker.find_links(14, True)
     linker.save_links()
 

@@ -1,5 +1,7 @@
 import pandas as pd
 import csv
+from os import listdir
+from os.path import isfile, join
 
 INDEX_GROOM = 30
 INDEX_GROOM_FATHER = 48
@@ -310,3 +312,31 @@ def get_relations():
 
 # generate_persons_birth()
 
+def get_uuid_links():
+    results_folder = r"D:\Documents\School\Informatica & Economie\Bachelorproject\RecordLinkage\data\burgerLinker\output\raw"
+
+    for file in [f for f in listdir(results_folder) if isfile(join(results_folder, f))]:
+        print(file)
+
+
+def get_uuid_B_D():
+    df_links = pd.read_csv("data\\burgerLinker\\output\\raw\\within-B-D-maxLev-3.csv", sep=";")
+    
+    for link in df_links.itertuples():
+        
+
+
+def get_uuid_B_M():
+    df_links = pd.read_csv("data\\burgerLinker\\output\\raw\\between-B-M-maxLev-3.csv", sep=";")
+    df_links = pd.read_csv("data\\burgerLinker\\output\\raw\\within-B-M-maxLev-3.csv", sep=";")
+
+
+def get_uuid_D_M():
+    df_links = pd.read_csv("data\\burgerLinker\\output\\raw\\between-D-M-maxLev-3.csv", sep=";")
+
+
+def get_uuid_M_M():
+    df_links = pd.read_csv("data\\burgerLinker\\output\\raw\\between-M-M-maxLev-3.csv", sep=";")
+
+
+get_uuid_links()
