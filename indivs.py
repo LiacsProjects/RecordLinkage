@@ -1,9 +1,6 @@
-import Levenshtein
 import csv
 import os
 import pandas as pd
-import time
-import networkx as nx
 
 
 def unique_file_name(path, extension = ""):
@@ -70,7 +67,7 @@ def unique_individuals():
     edges = get_edges()
     print("Edges:", len(edges))
     groups = connected_nodes(edges)
-    print("Groups:", len(groups))  # [['a', 'b', 'c'], ['d', 'e']]
+    print("Groups:", len(groups))
 
     identifier = 0
     unique_individuals = []

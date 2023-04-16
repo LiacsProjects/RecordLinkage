@@ -154,26 +154,6 @@ def unique_individuals_bl():
     df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role"])
     df_unique_individuals.to_csv(unique_file_name("data\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
-MODES = {
-    1: {"references": [1], "potential_links": [2, 3]}, # 1 
-    2: {"references": [1], "potential_links": [4]}, # 2
-    3: {"references": [1], "potential_links": [5]},
-    4: {"references": [1], "potential_links": [6]}, 
-
-    5: {"references": [2, 3], "potential_links": [2, 3]},
-    6: {"references": [2, 3], "potential_links": [4]}, # 3
-    7: {"references": [2, 3], "potential_links": [5]},  
-    8: {"references": [2, 3], "potential_links": [6]}, # 5
-
-    9: {"references": [4], "potential_links": [4]}, # 4
-    10: {"references": [4], "potential_links": [5]},
-    11: {"references": [4], "potential_links": [6]}, # 6
-
-    12: {"references": [5], "potential_links": [5]},
-    13: {"references": [5], "potential_links": [6]},
-
-    14: {"references": [6], "potential_links": [6]},
-}
 
 def get_roles(role):
     references = []
@@ -266,9 +246,6 @@ def unique_individuals_rl():
     
     df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id", "role", "sex"])
     df_unique_individuals.to_csv(unique_file_name("unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-
-
-unique_individuals_rl()
 
 
 def process_unique_timeline(uuid):
