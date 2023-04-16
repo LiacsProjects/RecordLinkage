@@ -33,6 +33,7 @@ def unique_individuals(linker):
         for edge in edges:
             nodes.update(edge)
 
+        print("Nodes:", len(nodes))
         uf = UnionFind(nodes)
 
         for edge in edges:
@@ -68,6 +69,17 @@ def unique_individuals(linker):
         return edges
 
 
+    def save_unique_individuals(unique_individuals):
+        df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id"])
+        df_unique_individuals.to_csv(unique_file_name(f"results\\unique\\{linker} Unique Individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+    def save_groups(groups):
+        with open(unique_file_name(f"results\\unique\\{linker} Groups", "txt"), 'w') as f:
+            for group in groups:
+                f.write(','.join(str(uuid) for uuid in group) + '\n')
+
+
     edges = get_edges(linker)
     print("Edges:", len(edges))
     groups = connected_nodes(edges)
@@ -80,10 +92,9 @@ def unique_individuals(linker):
         for node in group:
             unique_individuals.append([node, identifier])
         identifier += 1
-
-    df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id"])
-    df_unique_individuals.to_csv(unique_file_name(f"results\\unique\\{linker} Unique Individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-
+    
+    # save_unique_individuals(unique_individuals)
+    save_groups(groups)
 
 unique_individuals("RL")
 unique_individuals("BL")

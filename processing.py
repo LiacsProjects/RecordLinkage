@@ -441,7 +441,7 @@ class GeneratePersonLinks():
             persons = self.df_deaths[self.df_deaths["id_registration"] == link.id_certificate_deceased]
             deceased = persons[persons["role"] == 10].iloc[0]["uuid"]
 
-            self.links.append([5, child, deceased, ""])
+            self.links.append([5, child, deceased, "c"])
 
 
     def save_links(self):

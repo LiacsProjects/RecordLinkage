@@ -1,6 +1,6 @@
 import pandas as pd
-import csv
-
+import os
+import matplotlib.pyplot as plt
 
 def set_comparison():
 
@@ -35,6 +35,54 @@ def set_comparison():
     z = len(links_bl & links_rl)
     print("bl & rl", z)
 
+def unique_file_name(path, extension = ""):
+    i = 0
+    temp_path = path
+    while os.path.exists(temp_path + "." + extension):  #check of het bestand al bestaat
+        i += 1
+        temp_path = path + " ({})".format(str(i))
+    return temp_path + "." + extension
+
     
-set_comparison()
+def compare_groups():
+    def histogram(groups, filename):
+        sizes = [len(group) for group in groups]
+
+        # Plot histogram
+        plt.hist(sizes, bins=range(1, max(sizes) + 2), align='left')
+
+        # Set axis labels and title
+        plt.xlabel('Group size')
+        plt.ylabel('Frequency')
+        plt.title('Histogram of group sizes')
+
+        # Save plot
+        # plt.show()
+        plt.savefig(unique_file_name("results\\unique\\" + filename, "svg"))
+
+
+    def load_groups(filename):
+        with open(filename, 'r') as f:
+            groups = [[str(node) for node in line.strip().split(',')] for line in f.readlines()]
+        return groups
+
+
+    def find_common_groups(groups1, groups2):
+        set1 = set(tuple(sorted(group)) for group in groups1)
+        set2 = set(tuple(sorted(group)) for group in groups2)
+        common_groups = [list(group) for group in (set1 & set2)]
+
+        return common_groups
+
+
+    groups1 = load_groups("results\\unique\\BL Groups.txt")
+    groups2 = load_groups("results\\unique\\RL Groups.txt")
+
+    histogram(groups1, "BL Histogram")
+    histogram(groups2, "RL Histogram")
+
+    print("Common groups:",len(find_common_groups(groups1, groups2)))
+
+
+compare_groups()
 
