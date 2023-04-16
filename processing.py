@@ -462,7 +462,7 @@ class GeneratePersonLinks():
 persons = GeneratePersonLinks()
 persons.get_uuid_B_M()
 persons.get_uuid_D_M()
-# persons.get_uuid_M_M()
-# persons.get_uuid_B_D()
+persons.get_uuid_M_M()
+persons.get_uuid_B_D()
 persons.save_links()
 

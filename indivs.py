@@ -11,7 +11,7 @@ def unique_file_name(path, extension = ""):
         temp_path = path + " ({})".format(str(i))
     return temp_path + "." + extension
 
-def unique_individuals():
+def unique_individuals(linker):
     class UnionFind:
         def __init__(self, nodes):
             self.parent = {node: node for node in nodes}
@@ -48,12 +48,16 @@ def unique_individuals():
         return list(groups.values())
 
 
-    def get_edges():
-        dfs = [pd.read_csv("results\\recordLinker\\RL Links Persons.csv", sep=";"), 
-            pd.read_csv("results\\recordLinker\\RL Links Persons (1).csv", sep=";"), 
-            pd.read_csv("results\\recordLinker\\RL Links Persons (2).csv", sep=";"), 
-            pd.read_csv("results\\recordLinker\\RL Links Persons (3).csv", sep=";")]
-        
+    def get_edges(linker):
+        if linker == "RL":
+            dfs = [pd.read_csv("results\\recordLinker\\RL Links Persons.csv", sep=";"), 
+                pd.read_csv("results\\recordLinker\\RL Links Persons (1).csv", sep=";"), 
+                pd.read_csv("results\\recordLinker\\RL Links Persons (2).csv", sep=";"), 
+                pd.read_csv("results\\recordLinker\\RL Links Persons (3).csv", sep=";")]
+        elif linker == "BL":
+            dfs = [pd.read_csv("results\\burgerLinker\\BL Links Persons.csv", sep=";"), 
+                pd.read_csv("results\\burgerLinker\\BL Links Persons (1).csv", sep=";")]
+            
         df_links = pd.concat(dfs).reset_index(drop=True)
         print(df_links)
         edges = []
@@ -64,7 +68,7 @@ def unique_individuals():
         return edges
 
 
-    edges = get_edges()
+    edges = get_edges(linker)
     print("Edges:", len(edges))
     groups = connected_nodes(edges)
     print("Groups:", len(groups))
@@ -78,8 +82,9 @@ def unique_individuals():
         identifier += 1
 
     df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id"])
-    df_unique_individuals.to_csv(unique_file_name("results\\unique\\unique_individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_unique_individuals.to_csv(unique_file_name(f"results\\unique\\{linker} Unique Individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-unique_individuals()
+unique_individuals("RL")
+unique_individuals("BL")
 
