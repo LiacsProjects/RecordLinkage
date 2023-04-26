@@ -11,6 +11,7 @@ def unique_file_name(path, extension = ""):
         temp_path = path + " ({})".format(str(i))
     return temp_path + "." + extension
 
+
 def unique_individuals(linker):
     class UnionFind:
         def __init__(self, nodes):
