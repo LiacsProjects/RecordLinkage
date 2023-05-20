@@ -56,14 +56,12 @@ def unique_individuals(linker):
                 pd.read_csv("RecordLinker\\results\\RL Links Persons (1).csv", sep=";"), 
                 pd.read_csv("RecordLinker\\results\\RL Links Persons (2).csv", sep=";")]
         elif linker == "BL":
-            dfs = [pd.read_csv("results\\burgerLinker\\BL Links Persons.csv", sep=";"), 
-                pd.read_csv("results\\burgerLinker\\BL Links Persons (1).csv", sep=";")]
-            dfs = [pd.read_csv("results\\burgerLinker\\BL Links Persons (2).csv", sep=";")]
+            dfs = [pd.read_csv("BurgerLinker\\results\\BL Links Persons.csv", sep=";"), 
+                pd.read_csv("BurgerLinker\\results\\BL Links Persons (1).csv", sep=";")]
             
         df_links = pd.concat(dfs).reset_index(drop=True)
-        print(df_links)
-        edges = []
 
+        edges = []
         for link_person in df_links.itertuples():
             edges.append((link_person.reference_uuid, link_person.link_uuid))
         
@@ -72,14 +70,13 @@ def unique_individuals(linker):
 
     def save_unique_individuals(unique_individuals):
         df_unique_individuals = pd.DataFrame(unique_individuals, columns=["uuid", "unique_person_id"])
-        df_unique_individuals.to_csv(unique_file_name(f"Unique Individuals\\{linker} Unique Individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        df_unique_individuals.to_csv(unique_file_name(f"Unique Individuals\\results\\{linker} Unique Individuals", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
     def save_groups(groups):
-        with open(unique_file_name(f"Unique Individuals\\{linker} Groups", "txt"), 'w') as f:
+        with open(unique_file_name(f"Unique Individuals\\results\\{linker} Groups", "txt"), 'w') as f:
             for group in groups:
                 f.write(','.join(str(uuid) for uuid in group) + '\n')
-
 
     edges = get_edges(linker)
     print("Edges:", len(edges))
@@ -97,6 +94,6 @@ def unique_individuals(linker):
     save_unique_individuals(unique_individuals)
     save_groups(groups)
 
-unique_individuals("RL")
-# unique_individuals("BL")
+# unique_individuals("RL")
+unique_individuals("BL")
 

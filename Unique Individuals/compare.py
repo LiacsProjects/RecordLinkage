@@ -1,41 +1,6 @@
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
 import csv
-
-
-def set_comparison():
-
-    df_links_rl = pd.read_csv("results\\Links Persons RecordLinker (2).csv", sep=";")
-    df_links_rl = df_links_rl[df_links_rl["mode"] != 4]
-    df_links_rl = df_links_rl[df_links_rl["mode"] != 3]
-
-    df_links_bl = pd.read_csv("data\\results\\links h persons.csv", sep=";")
-    df_links_bl = pd.concat([df_links_bl, pd.read_csv("data\\results\\links b persons.csv", sep=";")])
-
-    links_rl = set()
-    links_bl = set()
-
-    print("rl", len(df_links_rl.index))
-    print("bl", len(df_links_bl.index))
-
-    for i in df_links_rl.itertuples():
-        links_rl.add(i.reference_uuid + i.link_uuid)
-
-    for j in df_links_bl.itertuples():
-        links_bl.add(j.reference_uuid + j.link_uuid)
-
-    n = len(links_rl | links_bl)
-    print("rl | bl", n)
-
-    x = len(links_rl - links_bl)
-    print("rl - bl", x)
-
-    y = len(links_bl - links_rl)
-    print("bl - rl", y)
-
-    z = len(links_bl & links_rl)
-    print("bl & rl", z)
 
 
 def unique_file_name(path, extension = ""):
@@ -68,22 +33,6 @@ def compare_groups():
         for i in dict(sorted(hist.items())):
             print(f"{i}, {hist[i]}")
 
-        # print("Aantal:", len(sizes))
-        # print("Average:", sum(sizes) / len(sizes), "\n")
-
-        # # Plot histogram
-        # plt.hist(sizes, bins=range(1, max(sizes) + 2), align="left")
-
-        # # Set axis labels and title
-        # plt.xlabel("References per Unique Historical Individual")
-        # plt.ylabel("Frequency")
-        # plt.yscale("log")
-        # plt.title(f"Histogram of References per Unique Historical Individual ({method})")
-
-        # # Save plot
-        # plt.show()
-        # plt.savefig(unique_file_name("results\\unique\\" + method + " Histogram", "svg"))
-
 
     def find_common_groups(groups1, groups2):
         set1 = set(tuple(sorted(group)) for group in groups1)
@@ -93,19 +42,19 @@ def compare_groups():
         return common_groups
 
 
-    # groups1 = load_groups("results\\unique\\BL Groups.txt")
-    groups2 = load_groups("Unique Individuals\\RL Groups.txt")
+    groups1 = load_groups("Unique Individuals\\results\\BL Groups.txt")
+    groups2 = load_groups("Unique Individuals\\results\\RL Groups.txt")
 
     # histogram(groups1, "BL")
-    histogram(groups2, "RL")
+    # histogram(groups2, "RL")
 
-    # print("Common groups:", len(find_common_groups(groups1, groups2)))
+    print("Common groups:", len(find_common_groups(groups1, groups2)))
 
 
 def get_timelines(linker):
     references = get_detailed_references()
 
-    groups = load_groups(f"Unique Individuals\\{linker} Groups.txt")
+    groups = load_groups(f"Unique Individuals\\results\\{linker} Groups.txt")
 
     unique_individuals_detailed = []
     unique_identifier = 1
@@ -127,7 +76,7 @@ def get_timelines(linker):
     print("Amount of persons:", unique_identifier)
 
     df_unique_individuals_detailed = pd.DataFrame(unique_individuals_detailed, columns=["uuid", "role", "name", "year", "unique_person_id"])
-    df_unique_individuals_detailed.to_csv(unique_file_name(f"Unique Individuals\\{linker} Detailed", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_unique_individuals_detailed.to_csv(unique_file_name(f"Unique Individuals\\results\\{linker} Detailed", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 def get_detailed_references():
@@ -172,9 +121,8 @@ def get_detailed_references():
     
 
 def analyse_timelines(linker):
-    df_references = pd.read_csv(f"Unique Individuals\\{linker} Detailed.csv", sep=";")
+    df_references = pd.read_csv(f"Unique Individuals\\results\\{linker} Detailed.csv", sep=";")
 
-    # person = pd.DataFrame(columns=["role", "name", "year"])
     person = []
     current_id = 1
 
@@ -221,11 +169,8 @@ def analyse_timelines(linker):
 
     hists = {"Completeness": histogram_completeness,
             "Born": histogram_born,
-            # "Child": histogram_child,
             "Died": histogram_died}
     
-    hist = {}
-
     for type in hists:
         hist = {}
         for size in hists[type]:
@@ -240,35 +185,12 @@ def analyse_timelines(linker):
 
     print("\nIncorrect", incorrect)
 
-    # plt.hist(histogram_died, bins=range(0, max(histogram_born) + 2), align="left")
-
-    # # Set axis labels and title
-    # plt.xlabel("References per Unique Historical Individual")
-    # plt.ylabel("Frequency")
-    # plt.title(f"Histogram of References per Unique Historical Individual")
-
-    # # Save plot
-    # plt.show()
-    # plt.savefig(unique_file_name("results\\unique\\"  + " Histogram", "svg"))
-    # df_histograms = pd.DataFrame(data)
-    # df_histograms.to_csv(f"results\\unique\\Analyse\\{linker} Histograms.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    # with open(f"results\\unique\\Analyse\\{linker} hist complete", "w") as f:
-    #     f.write("\n".join(histogram_completeness))
-    # with open(f"results\\unique\\Analyse\\{linker} hist born", "w") as f:
-    #     f.write("\n".join(histogram_born))
-    # with open(f"results\\unique\\Analyse\\{linker} hist child", "w") as f:
-    #     f.write("\n".join(histogram_child))
-    # with open(f"results\\unique\\Analyse\\{linker} hist died", "w") as f:
-    #     f.write("\n".join(histogram_died))
-
 
 # get_timelines("RL")
 # get_timelines("BL")
 
 # analyse_timelines("RL")
 # analyse_timelines("BL")
-
-# print(len(get_detailed_references()))
 
 compare_groups()
 
