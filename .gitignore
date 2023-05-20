@@ -1,16 +1,15 @@
 .env
 
-results/3/
-results/4/
-results/oud/
-results/recordLinker/
-results/burgerLinker/
-results/unique/
 
-data/processed/
-data/unprocessed/
-data/burgerLinker/input/
-data/pairs/
-data/pairs.csv
-data/oud/
+data/
+BurgerLinker/input/
+BurgerLinker/output/
+
+RecordLinker/data/
+RecordLinker/results/
+
+Unique Individuals/oud
+Unique Individuals/results
+
+
 
