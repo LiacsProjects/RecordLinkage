@@ -65,7 +65,7 @@ def get_clean_string(string):
 
 
 def generate_persons_marriage():
-    df_registrations = pd.read_csv(r'data\unprocessed\Huwelijk.csv', sep=";", dtype="string")
+    df_registrations = pd.read_csv("data\\Huwelijk.csv", sep=";", dtype="string")
 
     person_id = 1
     persons = []
@@ -429,8 +429,8 @@ def generate_persons_marriage():
                                                 "mar_location",
                                                 "uuid"])
 
-    df_registrations.to_csv(r"data\burgerLinker\input\Marriages\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    df_persons.to_csv(r"data\burgerLinker\input\Marriages\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_registrations.to_csv("BurgerLinker\\input\\Marriages\\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv("BurgerLinker\\input\\Marriages\\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 generate_persons_marriage()

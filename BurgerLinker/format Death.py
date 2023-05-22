@@ -65,7 +65,7 @@ def get_clean_string(string):
 
 
 def generate_persons_deaths():
-    df_registrations = pd.read_csv(r'data\unprocessed\Overlijden.csv', sep=";", dtype="string")
+    df_registrations = pd.read_csv("data\\Overlijden.csv", sep=";", dtype="string")
 
     person_id = 20_000_001
     persons = []
@@ -323,8 +323,8 @@ def generate_persons_deaths():
                                                 "mar_location",
                                                 "uuid"])
 
-    df_registrations.to_csv(r"data\burgerLinker\input\Deaths\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    df_persons.to_csv(r"data\burgerLinker\input\Deaths\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_registrations.to_csv("BurgerLinker\\input\Deaths\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv("BurgerLinker\\input\\Deaths\\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 generate_persons_deaths()

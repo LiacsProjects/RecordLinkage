@@ -360,43 +360,35 @@ def convertPersonsToRDF(inputData, outputData):
     print('Time elapsed (hh:mm:ss) {}'.format(time_elapsed))
 
 
-# # Births
-# csv_path = os.path.abspath(r"data\burgerLinker\input\Births\registrations.csv")
-# output_path = r"data\burgerLinker\input\nqs\bregistrations.nq"
-# convertRegistrationsToRDF(csv_path, output_path)
+# Births
+csv_path = os.path.abspath("BurgerLinker\\input\\Births\\registrations.csv")
+output_path = "BurgerLinker\\input\\nqs\\bregistrations.nq"
+convertRegistrationsToRDF(csv_path, output_path)
 
-# csv_path = os.path.abspath(r"data\burgerLinker\input\Births\persons.csv")
-# output_path = r"data\burgerLinker\input\nqs\bpersons.nq"
-# convertPersonsToRDF(csv_path, output_path)
+csv_path = os.path.abspath("BurgerLinker\\input\\Births\\persons.csv")
+output_path = "BurgerLinker\\input\\nqs\\bpersons.nq"
+convertPersonsToRDF(csv_path, output_path)
 
 
-# # Marriages
-# csv_path = os.path.abspath(r"data\burgerLinker\input\Marriages\registrations.csv")
-# output_path = r"data\burgerLinker\input\nqs\hregistrations.nq"
-# convertRegistrationsToRDF(csv_path, output_path)
+# Marriages
+csv_path = os.path.abspath("BurgerLinker\\input\\Marriages\\registrations.csv")
+output_path = "BurgerLinker\\input\\nqs\\hregistrations.nq"
+convertRegistrationsToRDF(csv_path, output_path)
 
-# csv_path = os.path.abspath(r"data\burgerLinker\input\Marriages\persons.csv")
-# output_path = r"data\burgerLinker\input\nqs\hpersons.nq"
-# convertPersonsToRDF(csv_path, output_path)
+csv_path = os.path.abspath("BurgerLinker\\input\\Marriages\\persons.csv")
+output_path = "BurgerLinker\\input\\nqs\\hpersons.nq"
+convertPersonsToRDF(csv_path, output_path)
 
 
 # Deaths
-csv_path = os.path.abspath(r"data\burgerLinker\input\Deaths\registrations.csv")
-output_path = r"data\burgerLinker\input\nqs\dregistrations.nq"
+csv_path = os.path.abspath("BurgerLinker\\input\\Deaths\\registrations.csv")
+output_path = "BurgerLinker\\input\\nqs\\dregistrations.nq"
 convertRegistrationsToRDF(csv_path, output_path)
 
-csv_path = os.path.abspath(r"data\burgerLinker\input\Deaths\persons.csv")
-output_path = r"data\burgerLinker\input\nqs\dpersons.nq"
+csv_path = os.path.abspath("BurgerLinker\\input\\Deaths\\persons.csv")
+output_path = "BurgerLinker\\input\\nqs\\dpersons.nq"
 convertPersonsToRDF(csv_path, output_path)
 
 
 # using the terminal, you can later merge the resulting files using the following cat command:
 # cat registrations.nq persons.nq > myCivilRegistries.nq
-# cat registrationsb.nq registrationsh.nq > registrations.nq
-# cat personsb.nq personsh.nq > persons.nq
-
-# cat bpersons.nq hpersons.nq dpersons.nq > persons.nq
-# cat bregistrations.nq hregistrations.nq dregistrations.nq > registrations.nq
-
-# cat bpersons.nq hpersons.nq dpersons.nq > persons.nq
-# cat bregistrations.nq hregistrations.nq dregistrations.nq > registrations.nq

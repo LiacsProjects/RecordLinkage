@@ -65,7 +65,7 @@ def get_clean_string(string):
 
 
 def generate_persons_births():
-    df_registrations = pd.read_csv(r'data\unprocessed\Geboorte.csv', sep=";", dtype="string")
+    df_registrations = pd.read_csv("data\\Geboorte.csv", sep=";", dtype="string")
 
     person_id = 1_000_001
     persons = []
@@ -281,8 +281,9 @@ def generate_persons_births():
                                                 "mar_location",
                                                 "uuid"])
 
-    df_registrations.to_csv(r"data\burgerLinker\input\Births\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
-    df_persons.to_csv(r"data\burgerLinker\input\Births\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+    df_registrations.to_csv("BurgerLinker\\input\\Births\registrations.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
+    df_persons.to_csv("BurgerLinker\input\Births\persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
 generate_persons_births()
