@@ -20,5 +20,5 @@ How BurgerLinker is applied is described in "BurgerLinker/README.md"
 # RecordLinker: #
 The workings behind RecordLinker are broadly described in "RecordLinker/README.md"
 
-# Result comparison: #
-How the resulting unique historical individuals are compared and created are described in "Unique Individuals/"
+# Unique Historical Individual generation & Comparison: #
+How the resulting unique historical individuals are compared and created are described in "Unique Individuals/README.md"
