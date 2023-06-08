@@ -20,10 +20,10 @@ AGE_DEATH_RANGE = {"min": 0,
                     "max": 100}
 
 PAIRS = {
-    str([1]): {"name": "parents", "child": True},
+    str([1]): {"name": "parents of newborns", "child": True},
     str([2]): {"name": "married couples", "child": False},
     str([3, 4]): {"name": "parents of married couples", "child": True},
-    str([5]): {"name": "deceased and their partners", "child": False},
+    str([5]): {"name": "deceased and partners", "child": False},
     str([6]): {"name": "parents of deceased", "child": True}}
 
 MODES = {
@@ -50,27 +50,6 @@ def unique_file_name(path, extension = ""):
         i += 1
         temp_path = path + " ({})".format(str(i))
     return temp_path + "." + extension
-
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
-    if iteration == total: 
-        print()
 
 
 class RecordLinker():
@@ -206,12 +185,12 @@ class RecordLinker():
                             distance = Levenshtein.distance(reference.child, potential_link.child)
 
                             if distance <= MAX_LEVENSTHEIN:
-                                sex = "c"
+                                sex = "-"
                                 links_persons.append([self.mode, reference.child_uuid, potential_link.child_uuid, sex])
                 except:
                     pass
             
-            else:
+            else: # Due to the unknown sex of the persons in the 'deceased and partner' pair a link can be found switching the order
                 if MODES[self.mode]["references"] == [5]:
                     distance = Levenshtein.distance(reference.woman + " " + reference.man, potential_link.man + " " + potential_link.woman)
 
@@ -229,8 +208,13 @@ class RecordLinker():
                             len(potential_link.man + potential_link.woman),
                             potential_link.year - reference.year])
 
-                        links_persons.append([self.mode, reference.woman_uuid, potential_link.man_uuid, "m"])
-                        links_persons.append([self.mode, reference.man_uuid, potential_link.woman_uuid, "v"])
+                        # If both reference pairs and potential links are 5, the sex is not known
+                        if MODES[self.mode]["potential_links"] == [5]:
+                            links_persons.append([self.mode, reference.woman_uuid, potential_link.man_uuid, "-"])
+                            links_persons.append([self.mode, reference.man_uuid, potential_link.woman_uuid, "-"])
+                        else:
+                            links_persons.append([self.mode, reference.woman_uuid, potential_link.man_uuid, "m"])
+                            links_persons.append([self.mode, reference.man_uuid, potential_link.woman_uuid, "v"])
 
         return links_certs, links_persons
 
@@ -345,8 +329,8 @@ if __name__ == "__main__":
     # linker.find_links(9, True)
     # linker.find_links(10, True)
     # linker.find_links(11, True)
-    # linker.find_links(12, True)
+    linker.find_links(12, True)
     # linker.find_links(13, True)
     # linker.find_links(14, True)
-    # linker.save_links()
+    linker.save_links()
 
