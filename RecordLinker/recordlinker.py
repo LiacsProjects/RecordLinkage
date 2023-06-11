@@ -318,19 +318,9 @@ class RecordLinker():
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     linker = RecordLinker()
-    # linker.find_links(1, True)
-    # linker.find_links(2, True)
-    # linker.find_links(3, True)
-    # linker.find_links(4, True)
-    # linker.find_links(5, True)
-    # linker.find_links(6, True)
-    # linker.find_links(7, True)
-    # linker.find_links(8, True)
-    # linker.find_links(9, True)
-    # linker.find_links(10, True)
-    # linker.find_links(11, True)
-    linker.find_links(12, True)
-    # linker.find_links(13, True)
-    # linker.find_links(14, True)
+    for mode in range(1,15):
+        linker.find_links(mode, True)
+        break
+
     linker.save_links()
 

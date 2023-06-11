@@ -1,7 +1,7 @@
-# Unique Historical Individual creation: #
+# Unique Historical Individual creation:
 The Union Find algorith is used to calculate Unique Historical Individuals. This algorithm finds all uuids that are linked. These groups of linked uuids are given a unique integer. This is performed in "Unique Individuals/individuals.py"
 
-# Result comparison: #
+# Result comparison:
 Now that the results of RecordLinker and BurgerLinker are generated and formatted, the quality can be compared. 
 
 Basic statistics are generated:
