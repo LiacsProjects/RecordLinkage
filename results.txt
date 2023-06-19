@@ -1,0 +1,32 @@
+Common groups: 72869
+
+RL
+352296 uhis
+2119436 uuids
+
+gem group size :
+6,02
+
+44769 incorrect     0.127078
+95938 compleet      0.272322
+
+gem born:
+0,61
+gem died:
+0,66
+
+----------------
+BL
+201994 uhis
+1394710 uuids
+
+gem group size :
+6,90
+
+49414 incorrect     0.244631
+62230 compleet      0.308078
+
+gem born:
+1,04
+gem died:
+0,76

@@ -43,7 +43,8 @@ def compare_groups():
 
 
     groups1 = load_groups("Unique Individuals\\results\\BL Groups.txt")
-    groups2 = load_groups("Unique Individuals\\results\\RL Groups.txt")
+    groups2 = load_groups("Unique Individuals\\results\\BL Groups beter.txt")
+    # groups2 = load_groups("Unique Individuals\\results\\RL Groups.txt")
 
     # histogram(groups1, "BL")
     # histogram(groups2, "RL")
@@ -172,6 +173,9 @@ def analyse_timelines(linker):
             "Died": histogram_died}
     
     for type in hists:
+        if type != "Completeness":
+            values = [value for value in hists[type] if value > 1]
+            print(f"Gemiddeld {type}", (sum(values) / len(values)))
         hist = {}
         for size in hists[type]:
             try:
@@ -186,11 +190,29 @@ def analyse_timelines(linker):
     print("\nIncorrect", incorrect)
 
 
+def get_role_hist(linker):
+    results = pd.read_csv(f"Unique Individuals\\results\\{linker} Detailed.csv", sep=";")
+    hist = {}
+
+    for size in results["role"]:
+        try:
+            hist[size] = hist[size] + 1
+        except:
+            hist[size] = 1
+
+    print(linker)
+    for i in dict(sorted(hist.items())):
+        print(f"{i}, {hist[i]}")
+
+
+# get_role_hist("BL")
+# get_role_hist("RL")
+
 # get_timelines("RL")
 # get_timelines("BL")
 
-# analyse_timelines("RL")
-# analyse_timelines("BL")
+analyse_timelines("RL")
+analyse_timelines("BL")
 
-compare_groups()
+# compare_groups()
 

@@ -83,16 +83,16 @@ def unique_individuals(linker):
     groups = connected_nodes(edges)
     print("Groups:", len(groups))
 
-    identifier = 0
-    unique_individuals = []
+    # identifier = 0
+    # unique_individuals = []
 
-    for group in groups:
-        for node in group:
-            unique_individuals.append([node, identifier])
-        identifier += 1
+    # for group in groups:
+    #     for node in group:
+    #         unique_individuals.append([node, identifier])
+    #     identifier += 1
     
-    save_unique_individuals(unique_individuals)
-    save_groups(groups)
+    # save_unique_individuals(unique_individuals)
+    # save_groups(groups)
 
 # unique_individuals("RL")
 unique_individuals("BL")
