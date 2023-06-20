@@ -245,6 +245,8 @@ def analyse_timelines(linker):
     print("Incorrect:", incorrect)
     print("Som:", complete + only_birth + only_death + no_birth_death + incorrect)
 
+    print(birth_first, birth_not_first)
+
 
 def get_role_hist(linker):
     results = pd.read_csv(f"Unique Individuals\\results\\{linker} Detailed.csv", sep=";")
@@ -267,8 +269,8 @@ def get_role_hist(linker):
 # get_timelines("RL")
 # get_timelines("BL")
 
-# analyse_timelines("RL")
-analyse_timelines("BL")
+analyse_timelines("RL")
+# analyse_timelines("BL")
 
 # compare_groups()
 
