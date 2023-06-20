@@ -127,67 +127,123 @@ def analyse_timelines(linker):
     person = []
     current_id = 1
 
-    histogram_completeness = []
-    histogram_born = []
-    histogram_child = []
-    histogram_died = []
+    duration = []
+
+    alive_per_year = []
+
+    incorrect_per_year = []
+    complete_per_year = []
+    only_birth_per_year = []
+    only_death_per_year = []
+    no_birth_death_per_year = []
+
+    born = []
+    married = []
+    child = []
+    died = []
+
+    birth_not_first = 0
+    birth_first = 0
+
     incorrect = 0
+    complete = 0
+    only_birth = 0
+    only_death = 0
+    no_birth_death = 0
 
     for reference in df_references.itertuples():
         if reference.unique_person_id != current_id:
-            born = 0
-            child = 0
-            died = 0
+            documented_years = [year for role, year in person if role not in [4, 6, 7]]
+            if len(documented_years) == 0:
+                documented_years = [0]
 
-            for role in person:
-                if role == 1:
-                    born += 1
-                elif role == 2:
-                    child += 1
-                elif role == 5:
-                    died += 1
+            max_year = max(documented_years)
+            min_year = min(documented_years)
+            range_life_course = list(range(min_year, max_year + 1))
 
-            if born == 1 and died == 1:
-                histogram_completeness.append("Complete")
-            elif born == 1:
-                histogram_completeness.append("One birth, no death")
-            elif died == 1:
-                histogram_completeness.append("One death, no birth")
-            else:
-                histogram_completeness.append("Other")
+            alive_per_year += range_life_course
+            
+            times_born = len([role for role, _ in person if role == 1])
+            times_married = len([role for role, _ in person if role == 3])
+            times_child = len([role for role, _ in person if role == 2])
+            times_died = len([role for role, _ in person if role == 5])
 
-            if born > 1 or died > 1:
+            born.append(times_born)
+            married.append(times_married)
+            child.append(times_child)
+            died.append(times_died)
+
+            if times_born == 1 and times_died == 1:
+                complete += 1
+                complete_per_year += range_life_course
+            elif times_born == 1 and times_died == 0:
+                only_birth += 1
+                only_birth_per_year += range_life_course
+            elif times_born == 0 and times_died == 1:
+                only_death += 1
+                only_death_per_year += range_life_course
+            elif times_born == 0 and times_died == 0:
+                no_birth_death += 1
+                no_birth_death_per_year += range_life_course
+            elif times_born > 1 or times_died > 1:
                 incorrect += 1
+                incorrect_per_year += range_life_course
 
-            histogram_born.append(born)
-            histogram_child.append(child)
-            histogram_died.append(died)
+            if times_born == 1:
+                birth_year = [year for role, year in person if role == 1][0]
+                if birth_year == min_year:
+                    birth_first += 1
+                else:
+                    birth_not_first += 1
+
+            duration.append(max_year - min_year)
 
             current_id += 1
             person = []
             
-        person.append(reference.role)
+        person.append((reference.role, reference.year))
 
-    hists = {"Completeness": histogram_completeness,
-            "Born": histogram_born,
-            "Died": histogram_died}
+
+    hists = {
+        # "born": born,
+        # "married": married,
+        # "child": child,
+        # "died": died,
+        # "duration": duration,
+
+        # "alive": alive_per_year,
+        # "incorrect": incorrect_per_year,
+        # "complete": complete_per_year,
+        # "only birth": only_birth_per_year,
+        # "only death": only_death_per_year,
+        # "no birth/death": no_birth_death_per_year
+    }
     
-    for type in hists:
-        if type != "Completeness":
-            values = [value for value in hists[type] if value > 1]
-            print(f"Gemiddeld {type}", (sum(values) / len(values)))
-        hist = {}
-        for size in hists[type]:
+    for hist in hists:
+        if hist in ["born", "child", "died", "duration"]:
+            print(f"Gemiddeld {hist}", (sum(hists[hist]) / len(hists[hist])))
+            values = [value for value in hists[hist] if value > 1]
+            print(f"Gemiddeld incorrect {hist}", (sum(values) / len(values)), "\n")
+
+        values = {}
+        for value in hists[hist]:
             try:
-                hist[size] = hist[size] + 1
+                values[value] = values[value] + 1
             except:
-                hist[size] = 1
+                values[value] = 1
 
-        print("\n" + type)
-        for i in dict(sorted(hist.items())):
-            print(f"{i}, {hist[i]}")
+        print(hist)
+        print("year, amount")
+        for i in dict(sorted(values.items())):
+            print(f"{i}, {values[i]}")
+        print("--------------------------\n")
 
-    print("\nIncorrect", incorrect)
+    print("\nComplete:", complete)
+    print("Only birth:", only_birth)
+    print("Only death:", only_death)
+    print("No birth/death:", no_birth_death)
+    print("Incorrect:", incorrect)
+    print("Som:", complete + only_birth + only_death + no_birth_death + incorrect)
 
 
 def get_role_hist(linker):
@@ -211,7 +267,7 @@ def get_role_hist(linker):
 # get_timelines("RL")
 # get_timelines("BL")
 
-analyse_timelines("RL")
+# analyse_timelines("RL")
 analyse_timelines("BL")
 
 # compare_groups()
