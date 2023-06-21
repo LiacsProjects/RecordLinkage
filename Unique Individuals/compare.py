@@ -1,6 +1,7 @@
 import pandas as pd
-import os
 import csv
+import os
+import collections
 
 
 def unique_file_name(path, extension = ""):
@@ -121,8 +122,11 @@ def get_detailed_references():
     return references
     
 
-def analyse_timelines(linker):
-    df_references = pd.read_csv(f"Unique Individuals\\results\\{linker} Detailed.csv", sep=";")
+def analyse_timelines(linking_method):
+    df_references = pd.read_csv(f"Unique Individuals\\results\\{linking_method} Detailed.csv", sep=";")
+    col_years = set(df_references["year"])
+    first_year = min(col_years)
+    last_year = max(col_years)
 
     person = []
     current_id = 1
@@ -162,7 +166,7 @@ def analyse_timelines(linker):
             range_life_course = list(range(min_year, max_year + 1))
 
             alive_per_year += range_life_course
-            
+
             times_born = len([role for role, _ in person if role == 1])
             times_married = len([role for role, _ in person if role == 3])
             times_child = len([role for role, _ in person if role == 2])
@@ -204,41 +208,48 @@ def analyse_timelines(linker):
         person.append((reference.role, reference.year))
 
 
-    hists = {
-        # "born": born,
-        # "married": married,
-        # "child": child,
-        # "died": died,
-        # "duration": duration,
-
-        # "alive": alive_per_year,
-        # "incorrect": incorrect_per_year,
-        # "complete": complete_per_year,
-        # "only birth": only_birth_per_year,
-        # "only death": only_death_per_year,
-        # "no birth/death": no_birth_death_per_year
+    life_course_histograms = {
+        "born": born,
+        "married": married,
+        "child": child,
+        "died": died,
+        "duration": duration
     }
-    
-    for hist in hists:
-        if hist in ["born", "child", "died", "duration"]:
-            print(f"Gemiddeld {hist}", (sum(hists[hist]) / len(hists[hist])))
-            values = [value for value in hists[hist] if value > 1]
-            print(f"Gemiddeld incorrect {hist}", (sum(values) / len(values)), "\n")
 
-        values = {}
-        for value in hists[hist]:
-            try:
-                values[value] = values[value] + 1
-            except:
-                values[value] = 1
+    year_histograms = {
+        "complete": complete_per_year,
+        "only birth": only_birth_per_year,
+        "only death": only_death_per_year,
+        "no birth/death": no_birth_death_per_year,
+        "incorrect": incorrect_per_year,
+        "alive": alive_per_year
+    }
 
-        print(hist)
-        print("year, amount")
-        for i in dict(sorted(values.items())):
-            print(f"{i}, {values[i]}")
-        print("--------------------------\n")
+    frequencies = pd.DataFrame(0, columns=year_histograms.keys(), index=[0] + list(range(first_year, last_year + 1)))
 
-    print("\nComplete:", complete)
+    for hist_type, hist_data in year_histograms.items():
+        frequency = collections.Counter(hist_data)
+
+        for key, value in frequency.items():
+            frequencies.at[key, hist_type] = value
+
+    frequencies.to_csv(unique_file_name(f"Unique Individuals\\{linking_method} Histogram life courses", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
+
+    for hist_type, hist_data in life_course_histograms.items(): 
+        frequency = collections.Counter(hist_data)
+
+        frequencies = pd.DataFrame(
+            0, 
+            columns=[hist_type], 
+            index=list(range(min(frequency.keys()), max(frequency.keys()) + 1)))
+
+        for key, value in frequency.items():
+            frequencies.at[key, hist_type] = value
+        
+        frequencies.to_csv(unique_file_name(f"Unique Individuals\\{linking_method} Histogram {hist_type}", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
+
+    print(linking_method)
+    print("Complete:", complete)
     print("Only birth:", only_birth)
     print("Only death:", only_death)
     print("No birth/death:", no_birth_death)
@@ -246,6 +257,9 @@ def analyse_timelines(linker):
     print("Som:", complete + only_birth + only_death + no_birth_death + incorrect)
 
     print(birth_first, birth_not_first)
+    # print(total1, total2)
+    # print(sum(alive_per_year), sum(complete_per_year) + sum(only_birth_per_year) + sum(only_death_per_year) + sum(incorrect_per_year) + sum(no_birth_death_per_year))
+    print("-------------------\n")
 
 
 def get_role_hist(linker):
@@ -270,7 +284,7 @@ def get_role_hist(linker):
 # get_timelines("BL")
 
 analyse_timelines("RL")
-# analyse_timelines("BL")
+analyse_timelines("BL")
 
 # compare_groups()
 
