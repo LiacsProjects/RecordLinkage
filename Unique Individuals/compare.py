@@ -131,12 +131,15 @@ def analyse_timelines(linking_method):
     person = []
     current_id = 1
 
+    references = 0
+
     data = {
         "born": [],
         "married": [],
         "child": [],
         "died": [],
         "duration": [],
+        "group_size": [],
         "born_first": 0,
         "not_born_first": 0,
         "complete": 0,
@@ -174,6 +177,7 @@ def analyse_timelines(linking_method):
         data["child"].append(times_child)
         data["died"].append(times_died)
         data["duration"].append(max_year - min_year)
+        data["group_size"].append(len(person))
 
         if times_born == 1 and times_died == 1:
             data["complete"] += 1
@@ -199,7 +203,7 @@ def analyse_timelines(linking_method):
                 data["not_born_first"] += 1
 
 
-    print("groups:", len(df_references.groupby("unique_person_id")))
+    print("Groups:", len(df_references.groupby("unique_person_id")))
 
     for reference in df_references.itertuples():
         if reference.unique_person_id != current_id:
@@ -208,6 +212,7 @@ def analyse_timelines(linking_method):
             person = []
 
         person.append((reference.role, reference.year))
+        references += 1
 
     process_life_course(person, data)
     
@@ -216,7 +221,8 @@ def analyse_timelines(linking_method):
         "married": data["married"],
         "child": data["child"],
         "died": data["died"],
-        "duration": data["duration"]
+        "duration": data["duration"],
+        "group_size": data["group_size"]
     }
 
     year_histograms = {
@@ -260,8 +266,7 @@ def analyse_timelines(linking_method):
     print("Som:", data["complete"] + data["only_birth"] + data["only_death"] + data["no_birth_death"] + data["incorrect"])
 
     print(data["born_first"], data["not_born_first"])
-    # print(total1, total2)
-    # print(sum(alive_per_year), sum(complete_per_year) + sum(only_birth_per_year) + sum(only_death_per_year) + sum(incorrect_per_year) + sum(no_birth_death_per_year))
+    print("References:", references)
     print("-------------------\n")
 
 
