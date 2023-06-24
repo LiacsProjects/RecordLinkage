@@ -123,13 +123,13 @@ def get_detailed_references():
     
 
 def analyse_timelines(linking_method):
-    df_references = pd.read_csv(f"Unique Individuals\\results\\{linking_method} Detailed.csv", sep=";")
+    df_references = pd.read_csv(f"Unique Individuals\\results\\{linking_method} Detailed.csv", sep=";").sort_values(by=["unique_person_id"])
     col_years = set(df_references["year"])
     first_year = min(col_years)
     last_year = max(col_years)
 
     person = []
-    current_id = 0
+    current_id = 1
 
     data = {
         "born": [],
@@ -199,6 +199,8 @@ def analyse_timelines(linking_method):
                 data["not_born_first"] += 1
 
 
+    print("groups:", len(df_references.groupby("unique_person_id")))
+
     for reference in df_references.itertuples():
         if reference.unique_person_id != current_id:
             process_life_course(person, data)
@@ -225,8 +227,6 @@ def analyse_timelines(linking_method):
         "incorrect": data["incorrect_per_year"],
         "alive": data["alive_per_year"]
     }
-
-
 
     frequencies = pd.DataFrame(0, columns=year_histograms.keys(), index=[0] + list(range(first_year, last_year + 1)))
 
@@ -302,7 +302,7 @@ def get_role_hist_pairs():
 # get_timelines("RL")
 # get_timelines("BL")
 
-# analyse_timelines("RL")
+analyse_timelines("RL")
 analyse_timelines("BL")
 
 # compare_groups()

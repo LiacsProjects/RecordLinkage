@@ -94,6 +94,6 @@ def unique_individuals(linker):
     # save_unique_individuals(unique_individuals)
     # save_groups(groups)
 
-# unique_individuals("RL")
-unique_individuals("BL")
+unique_individuals("RL")
+# unique_individuals("BL")
 
