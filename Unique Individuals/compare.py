@@ -42,10 +42,8 @@ def compare_groups():
 
         return common_groups
 
-
     groups1 = load_groups("Unique Individuals\\results\\BL Groups.txt")
-    groups2 = load_groups("Unique Individuals\\results\\BL Groups beter.txt")
-    # groups2 = load_groups("Unique Individuals\\results\\RL Groups.txt")
+    groups2 = load_groups("Unique Individuals\\results\\RL Groups.txt")
 
     # histogram(groups1, "BL")
     # histogram(groups2, "RL")
@@ -246,7 +244,7 @@ def analyse_timelines(linking_method):
 
     for hist_type, hist_data in life_course_histograms.items(): 
         frequency = collections.Counter(hist_data)
-
+        print(hist_type, "average:", sum(hist_data) / len(hist_data))
         frequencies = pd.DataFrame(
             0, 
             columns=[hist_type], 
