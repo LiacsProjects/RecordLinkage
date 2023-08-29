@@ -57,7 +57,7 @@ def get_timelines(linker):
     groups = load_groups(f"Unique Individuals\\results\\{linker} Groups.txt")
 
     unique_individuals_detailed = []
-    unique_identifier = 1
+    unique_identifier = 0
 
     errors = 0
 
@@ -69,6 +69,7 @@ def get_timelines(linker):
                 unique_individuals_detailed.append([uuid, person["role"], person["name"], person["year"], unique_identifier])
             except:
                 errors += 1
+                unique_individuals_detailed.append([uuid, "", "", "", unique_identifier])
         
         unique_identifier += 1
 
@@ -127,7 +128,7 @@ def analyse_timelines(linking_method):
     last_year = max(col_years)
 
     person = []
-    current_id = 1
+    current_id = 0
 
     references = 0
 
@@ -150,18 +151,19 @@ def analyse_timelines(linking_method):
         "only_death_per_year": [],
         "no_birth_death_per_year": [],
         "incorrect_per_year": [],
-        "alive_per_year": []
+        "alive_per_year": [],
+        "status": []
     }
 
 
-    def process_life_course(person, data):
-        documented_years = [year for role, year in person if role not in [4, 6, 7]]
+    def process_life_course(person, data, id):
+        documented_years = [year for role, year in person if role not in [0, 4, 6, 7]]
         if len(documented_years) == 0:
             documented_years = [0]
 
         max_year = max(documented_years)
         min_year = min(documented_years)
-        range_life_course = list(range(min_year, max_year + 1))
+        range_life_course = list(range(int(min_year), int(max_year) + 1))
 
         data["alive_per_year"] += range_life_course
 
@@ -201,71 +203,108 @@ def analyse_timelines(linking_method):
                 data["not_born_first"] += 1
 
 
-    print("Groups:", len(df_references.groupby("unique_person_id")))
+        if times_born > 1 or times_died > 1:
+            status = 5
+        elif times_born == 0 and times_died == 0:
+            status = 4
+        elif times_born == 0 and times_died == 1:
+            status = 3
+        elif times_born == 1 and times_died == 0:
+            birth_year = [year for role, year in person if role == 1][0]
+            if birth_year == min_year:
+                status = 2
+            else:
+                status = 5
+        elif times_born == 1 and times_died == 1:
+            birth_year = [year for role, year in person if role == 1][0]
+            if birth_year == min_year:
+                status = 1
+            else:
+                status = 5
+        else:
+            status = 6
+        
+        data["status"].append([id, status, times_born, times_married, times_child, times_died, min_year, max_year, max_year - min_year, len(person)])
 
+
+    print("Groups:", len(df_references.groupby("unique_person_id")))
+    # print(df_references)
+    # for reference in df_references.itertuples():
+    #     if reference.uuid == "cef4e385-9022-2cbc-ddef-e45f088de4a5":
+    #         print(reference)
+    #         print(str(reference.role))
+    #         if pd.isna(reference.role):
+    #             print("ja")
+    # return
     for reference in df_references.itertuples():
         if reference.unique_person_id != current_id:
-            process_life_course(person, data)
+            process_life_course(person, data, current_id)
             current_id = reference.unique_person_id
             person = []
-
-        person.append((reference.role, reference.year))
+        if not pd.isna(reference.role):
+            person.append((reference.role, reference.year))
+        # else:
+        #     person.append((0, 0))
         references += 1
 
-    process_life_course(person, data)
+    process_life_course(person, data, reference.unique_person_id)
     
-    life_course_histograms = {
-        "born": data["born"],
-        "married": data["married"],
-        "child": data["child"],
-        "died": data["died"],
-        "duration": data["duration"],
-        "group_size": data["group_size"]
-    }
+    
+    df_status = pd.DataFrame(data["status"], columns=["unique_person_id", "status", "births", "marriages", "children", "deaths", "start", "end", "duration", "group_size"])
+    df_status.to_csv(unique_file_name(f"Unique Individuals\\results\\{linking_method} Status", "csv"), sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
-    year_histograms = {
-        "complete": data["complete_per_year"],
-        "only birth": data["only_birth_per_year"],
-        "only death": data["only_death_per_year"],
-        "no birth/death": data["no_birth_death_per_year"],
-        "incorrect": data["incorrect_per_year"],
-        "alive": data["alive_per_year"]
-    }
+    # life_course_histograms = {
+    #     "born": data["born"],
+    #     "married": data["married"],
+    #     "child": data["child"],
+    #     "died": data["died"],
+    #     "duration": data["duration"],
+    #     "group_size": data["group_size"]
+    # }
 
-    frequencies = pd.DataFrame(0, columns=year_histograms.keys(), index=[0] + list(range(first_year, last_year + 1)))
+    # year_histograms = {
+    #     "complete": data["complete_per_year"],
+    #     "only birth": data["only_birth_per_year"],
+    #     "only death": data["only_death_per_year"],
+    #     "no birth/death": data["no_birth_death_per_year"],
+    #     "incorrect": data["incorrect_per_year"],
+    #     "alive": data["alive_per_year"]
+    # }
 
-    for hist_type, hist_data in year_histograms.items():
-        frequency = collections.Counter(hist_data)
+    # frequencies = pd.DataFrame(0, columns=year_histograms.keys(), index=[0] + list(range(first_year, last_year + 1)))
 
-        for key, value in frequency.items():
-            frequencies.at[key, hist_type] = value
+    # for hist_type, hist_data in year_histograms.items():
+    #     frequency = collections.Counter(hist_data)
 
-    frequencies.to_csv(unique_file_name(f"Unique Individuals\\Histograms\\{linking_method} Histogram life courses", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
+    #     for key, value in frequency.items():
+    #         frequencies.at[key, hist_type] = value
 
-    for hist_type, hist_data in life_course_histograms.items(): 
-        frequency = collections.Counter(hist_data)
-        print(hist_type, "average:", sum(hist_data) / len(hist_data))
-        frequencies = pd.DataFrame(
-            0, 
-            columns=[hist_type], 
-            index=list(range(min(frequency.keys()), max(frequency.keys()) + 1)))
+    # frequencies.to_csv(unique_file_name(f"Unique Individuals\\Histograms\\{linking_method} Histogram life courses", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
 
-        for key, value in frequency.items():
-            frequencies.at[key, hist_type] = value
+    # for hist_type, hist_data in life_course_histograms.items(): 
+    #     frequency = collections.Counter(hist_data)
+    #     print(hist_type, "average:", sum(hist_data) / len(hist_data))
+    #     frequencies = pd.DataFrame(
+    #         0, 
+    #         columns=[hist_type], 
+    #         index=list(range(min(frequency.keys()), max(frequency.keys()) + 1)))
+
+    #     for key, value in frequency.items():
+    #         frequencies.at[key, hist_type] = value
         
-        frequencies.to_csv(unique_file_name(f"Unique Individuals\\Histograms\\{linking_method} Histogram {hist_type}", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
+    #     frequencies.to_csv(unique_file_name(f"Unique Individuals\\Histograms\\{linking_method} Histogram {hist_type}", "csv"), sep=";", quoting=csv.QUOTE_NONNUMERIC)
 
-    print(linking_method)
-    print("Complete:", data["complete"])
-    print("Only birth:", data["only_birth"])
-    print("Only death:", data["only_death"])
-    print("No birth/death:", data["no_birth_death"])
-    print("Incorrect:", data["incorrect"])
-    print("Som:", data["complete"] + data["only_birth"] + data["only_death"] + data["no_birth_death"] + data["incorrect"])
+    # print(linking_method)
+    # print("Complete:", data["complete"])
+    # print("Only birth:", data["only_birth"])
+    # print("Only death:", data["only_death"])
+    # print("No birth/death:", data["no_birth_death"])
+    # print("Incorrect:", data["incorrect"])
+    # print("Som:", data["complete"] + data["only_birth"] + data["only_death"] + data["no_birth_death"] + data["incorrect"])
 
-    print(data["born_first"], data["not_born_first"])
-    print("References:", references)
-    print("-------------------\n")
+    # print(data["born_first"], data["not_born_first"])
+    # print("References:", references)
+    # print("-------------------\n")
 
 
 def get_role_hist(linking_method):
@@ -298,6 +337,33 @@ def get_role_hist_pairs():
         print(f"{i}, {hist[i]}")
 
 
+def load_references(filename):
+    references = set()
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            for reference in line.strip().split(','):
+                references.add(reference)
+    return references
+
+
+def compare_coverage():
+    all_references = get_detailed_references()
+    bl_references = load_references("Unique Individuals\\results\\BL Groups.txt").intersection(set(all_references.keys()))
+    rl_references = load_references("Unique Individuals\\results\\RL Groups.txt")
+
+    print(len(bl_references))
+    print(len(rl_references))
+
+    intersection = bl_references.intersection(rl_references)
+    print(len(intersection))
+
+    rl_wel = rl_references - bl_references
+    print(len(rl_wel))
+
+    bl_wel = bl_references - rl_references
+    print(len(bl_wel))
+
+
 # get_role_hist("BL")
 # get_role_hist("RL")
 # get_role_hist_pairs()
@@ -305,8 +371,9 @@ def get_role_hist_pairs():
 # get_timelines("RL")
 # get_timelines("BL")
 
-analyse_timelines("RL")
+# analyse_timelines("RL")
 analyse_timelines("BL")
 
 # compare_groups()
+# compare_coverage()
 
