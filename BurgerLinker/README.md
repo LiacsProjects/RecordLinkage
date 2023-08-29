@@ -1,8 +1,8 @@
-# BurgerLinker #
+# BurgerLinker: #
 https://github.com/CLARIAH/burgerLinker/
 The details on inner workings and use case can be found in the repository mentioned above.
 
-# Data Preprocessing #
+# Data Preprocessing: #
 The input files supplied by ELO need to be processed in order to apply BurgerLinker. BurgerLinker does not support divorce certificates. The files to process:
 - Geboorte.csv
 - Huwelijk.csv
@@ -27,7 +27,7 @@ These scripts produce 6 .csv files; a registration file and a person file for ea
 
 4. The one .nq file is used as input for BurgerLinker. The ConvertToHDT function is called. A HDT file and index file is created. This data structure is used to create the certificate links.
 
-# Result processing #
+# Result processing: #
 BurgerLinker returns .csv files containing linked certificate pairs. To produce unique historical individuals, person links need to be generated. This is done in "BurgerLinker/processing.py".
 
 This script looks at the linked certificates to reverse engineer what persons where compared. The compared person references need to be linked. Some linking modes are straight forward, because the same roles are always linked. Other modes are more complicated, because the Levenshtein distance needs to be calculated again to determine what persons are the same. For example, when parents of married couples are linked, it is not clear if the parents of the bride or groom were linked. The names with the smallest distance are saved.

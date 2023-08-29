@@ -237,8 +237,6 @@ class RecordLinker():
             bar_width = 50
             filledLength = int(bar_width * procentage)
             bar = "█" * filledLength + "-" * (bar_width - filledLength)
-            # print(filledLength, procentage)
-            # print(bar)
             print("\r Progress |" + bar, end="")
 
 
