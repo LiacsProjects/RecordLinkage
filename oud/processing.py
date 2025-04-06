@@ -277,7 +277,7 @@ def generate_persons_birth():
     df_persons.to_csv("persons.csv", sep=";", index=False, quoting=csv.QUOTE_NONNUMERIC)
 
 
-def get_relations():  
+def get_relations():
     df_marriages = pd.read_csv("data\\marriages met uuid.csv", sep=";")
     df_persons = pd.read_csv("data\\persons.csv", sep=";")
 
@@ -301,7 +301,7 @@ def get_relations():
             relations.append([marriage.bruidegom_uuid, marriage.vader_bruidegom_uuid, "m", "m", "zoon"])
         if valid_name(groom_mother_id):
             relations.append([marriage.bruidegom_uuid, marriage.moeder_bruidegom_uuid, "m", "v", "zoon"])
-        if valid_name(bride_father_id):    
+        if valid_name(bride_father_id):
             relations.append([marriage.bruid_uuid, marriage.vader_bruid_uuid, "v", "m", "dochter"])
         if valid_name(bride_mother_id):
             relations.append([marriage.bruid_uuid, marriage.moeder_bruid_uuid, "v", "v", "dochter"])

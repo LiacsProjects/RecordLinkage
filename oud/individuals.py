@@ -1,6 +1,6 @@
 import csv
 import os
-import pandas as pd
+import polars as pl
 
 
 def unique_file_name(path, extension = ""):
@@ -52,8 +52,9 @@ def unique_individuals(linker):
 
     def get_edges(linker):
         if linker == "RL":
-            dfs = [pd.read_csv("results\\recordLinker\\RL Links Persons.csv", sep=";"), 
-                pd.read_csv("results\\recordLinker\\RL Links Persons (1).csv", sep=";"), 
+            dfs = [
+                pl.read_parquet("results\\recordLinker\\RL Links Persons.csv", sep=";"), 
+                pl.read_parquet("results\\recordLinker\\RL Links Persons (1).csv", sep=";"), 
                 pd.read_csv("results\\recordLinker\\RL Links Persons (2).csv", sep=";"), 
                 pd.read_csv("results\\recordLinker\\RL Links Persons (3).csv", sep=";")]
         elif linker == "BL":
@@ -98,5 +99,5 @@ def unique_individuals(linker):
     save_groups(groups)
 
 unique_individuals("RL")
-unique_individuals("BL")
+# unique_individuals("BL")
 
