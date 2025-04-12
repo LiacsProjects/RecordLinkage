@@ -74,12 +74,15 @@ def generate_persons_marriage():
     relaties = []
     huwelijken = []
 
-    # aantal_incorrecte_datum = 0
+    aantal = 0
+    aantal_missende_geb = {rol: 0 for rol in ROLLEN}
+    aantal_missende_persoon = {rol: 0 for rol in ROLLEN}
 
     for huwelijk in df_huwelijken_ruw.iter_rows():
         try:
             datum_huwelijk = get_date(huwelijk[26])
         except Exception:
+            aantal += 1
             continue
 
         huwelijken.append([
@@ -93,11 +96,13 @@ def generate_persons_marriage():
             index = ROLLEN[rol]
 
             if not huwelijk[index]:
+                aantal_missende_persoon[rol] += 1
                 continue
 
             try:
                 jaar, maand, dag = get_date(huwelijk[index + 15])
             except Exception:
+                aantal_missende_geb[rol] += 1
                 jaar, maand, dag = None, None, None
 
             leeftijd = get_age(opschonen(huwelijk[index + 12]))
@@ -106,16 +111,16 @@ def generate_persons_marriage():
                 jaar = datum_huwelijk[0] - leeftijd
 
             persoon = [
-                huwelijk[index],                # uuid
-                rol,                            # Role
+                huwelijk[index],                    # uuid
+                rol,                                # Rol
                 opschonen(huwelijk[index + 9]),     # Voornaam
                 opschonen(huwelijk[index + 10]),    # Tussenvoegsel
                 opschonen(huwelijk[index + 11]),    # Geslachtsnaam
-                leeftijd,                       # Age
+                leeftijd,                           # Leeftijd
                 opschonen(huwelijk[index + 13]),    # Beroep
                 opschonen(huwelijk[index + 16]),    # Woonplaats
                 opschonen(huwelijk[index + 14]),    # Geboorte plaats
-                jaar, maand, dag,               # Geboorte datum
+                jaar, maand, dag,                   # Geboorte datum
             ]
             personen.append(persoon)
 
@@ -149,7 +154,10 @@ def generate_persons_marriage():
                 huwelijk[INDEX_BRUID_MOEDER],
                 "Moeder"
             ])
-        if huwelijk[INDEX_BRUIDEGOM_VADER] and huwelijk[INDEX_BRUIDEGOM_MOEDER]:
+        if (
+            huwelijk[INDEX_BRUIDEGOM_VADER]
+            and huwelijk[INDEX_BRUIDEGOM_MOEDER]
+        ):
             relaties.append([
                 huwelijk[INDEX_BRUIDEGOM_VADER],
                 huwelijk[INDEX_BRUIDEGOM_MOEDER],
@@ -161,6 +169,10 @@ def generate_persons_marriage():
                 huwelijk[INDEX_BRUID_MOEDER],
                 "Partner"
             ])
+
+    print(aantal)
+    print(aantal_missende_geb)
+    print(aantal_missende_persoon)
 
     print(len(huwelijken))
     print(len(personen))
@@ -197,7 +209,7 @@ def generate_persons_marriage():
         ]
     )
     df_personen
-    df_personen.write_parquet("data\\personen.pq")
+    df_personen.write_parquet("data\\hw-personen.pq")
 
     df_relaties = pl.DataFrame(
         relaties,
@@ -208,7 +220,7 @@ def generate_persons_marriage():
             "relatie",
         ]
     )
-    df_relaties.write_parquet("data\\relaties.pq")
+    df_relaties.write_parquet("data\\hw-relaties.pq")
 
 
 if __name__ == "__main__":

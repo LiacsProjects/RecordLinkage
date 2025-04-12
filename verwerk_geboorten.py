@@ -71,19 +71,17 @@ def verwerk_geboorten():
     personen = []
     relaties = []
     geboorten = []
+
     aantal = 0
     aantal_missende_geb = {rol: 0 for rol in ROLLEN}
     aantal_missende_persoon = {rol: 0 for rol in ROLLEN}
+
     for geboorte in df_geboorten_ruw.iter_rows():
 
         try:
             datum_geboorte = get_date(geboorte[42])
-        except Exception as e:
+        except Exception:
             aantal += 1
-            # print(e, "datum geboorte")
-            # breakpoint()
-            # print(geboorte)
-            # breakpoint()
             continue
 
         geboorten.append([
@@ -96,16 +94,12 @@ def verwerk_geboorten():
 
             if not geboorte[index]:
                 aantal_missende_persoon[rol] += 1
-                # print("niks")
-                # breakpoint()
                 continue
 
             try:
                 jaar, maand, dag = get_date(geboorte[index + 14])
-            except Exception as e:
+            except Exception:
                 aantal_missende_geb[rol] += 1
-                # print(e, "geboortedatum")
-                # breakpoint()
                 jaar, maand, dag = None, None, None
 
             leeftijd = get_age(opschonen(geboorte[index + 17]))
@@ -114,17 +108,17 @@ def verwerk_geboorten():
                 jaar = datum_geboorte[0] - leeftijd
 
             persoon = [
-                geboorte[index],                         # uuid
-                rol,                                               # Role
-                opschonen(geboorte[index + 9]),              # Voornaam
-                opschonen(geboorte[index + 10]),             # Tussenvoegsel
-                opschonen(geboorte[index + 11]),             # Geslachtsnaam
-                leeftijd,    # Age
-                opschonen(geboorte[index + 16]),             # Beroep
-                opschonen(geboorte[index + 13]),             # Geboorte plaats
-                jaar, maand, dag,                 # Geboorte datum
-                opschonen(geboorte[index + 12])]             # Woonplaats
-
+                geboorte[index],                    # uuid
+                rol,                                # Rol
+                opschonen(geboorte[index + 9]),     # Voornaam
+                opschonen(geboorte[index + 10]),    # Tussenvoegsel
+                opschonen(geboorte[index + 11]),    # Geslachtsnaam
+                leeftijd,                           # Leeftijd
+                opschonen(geboorte[index + 16]),    # Beroep
+                opschonen(geboorte[index + 12]),    # Woonplaats
+                opschonen(geboorte[index + 13]),    # Geboorte plaats
+                jaar, maand, dag,                   # Geboorte datum
+            ]
             personen.append(persoon)
 
         if geboorte[INDEX_VADER] and geboorte[INDEX_MOEDER]:
@@ -145,11 +139,14 @@ def verwerk_geboorten():
                 geboorte[INDEX_MOEDER],
                 "Moeder"
             ])
-        # break
+
+    print(aantal)
+    print(aantal_missende_geb)
+    print(aantal_missende_persoon)
+
     print(len(geboorten))
     print(len(personen))
     print(len(relaties))
-    breakpoint()
 
     df_geboorten = pl.DataFrame(
         geboorten,
@@ -157,8 +154,7 @@ def verwerk_geboorten():
         schema=[
             "uuid",
             "jaar", "maand", "dag",
-            "bruidegom-uuid",
-            "bruid-uuid",
+            "kind-uuid",
         ]
     )
     df_geboorten.write_parquet("data\\geboorten.pq")
@@ -182,7 +178,7 @@ def verwerk_geboorten():
         ]
     )
     df_personen
-    df_personen.write_parquet("data\\personen.pq")
+    df_personen.write_parquet("data\\gb-personen.pq")
 
     df_relaties = pl.DataFrame(
         relaties,
@@ -193,7 +189,7 @@ def verwerk_geboorten():
             "relatie",
         ]
     )
-    df_relaties.write_parquet("data\\relaties.pq")
+    df_relaties.write_parquet("data\\gb-relaties.pq")
 
 
 if __name__ == "__main__":
