@@ -96,9 +96,9 @@ def generate_persons_marriage():
                 continue
 
             try:
-                dag, maand, jaar = get_date(huwelijk[index + 15])
+                jaar, maand, dag = get_date(huwelijk[index + 15])
             except Exception:
-                dag, maand, jaar = None, None, None
+                jaar, maand, dag = None, None, None
 
             leeftijd = get_age(opschonen(huwelijk[index + 12]))
 
@@ -148,6 +148,18 @@ def generate_persons_marriage():
                 huwelijk[INDEX_BRUID],
                 huwelijk[INDEX_BRUID_MOEDER],
                 "Moeder"
+            ])
+        if huwelijk[INDEX_BRUIDEGOM_VADER] and huwelijk[INDEX_BRUIDEGOM_MOEDER]:
+            relaties.append([
+                huwelijk[INDEX_BRUIDEGOM_VADER],
+                huwelijk[INDEX_BRUIDEGOM_MOEDER],
+                "Partner"
+            ])
+        if huwelijk[INDEX_BRUID_VADER] and huwelijk[INDEX_BRUID_MOEDER]:
+            relaties.append([
+                huwelijk[INDEX_BRUID_VADER],
+                huwelijk[INDEX_BRUID_MOEDER],
+                "Partner"
             ])
 
     print(len(huwelijken))
