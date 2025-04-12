@@ -1,9 +1,5 @@
-import Levenshtein
 import polars as pl
-import csv
-import os
-import re
-from datetime import date
+
 
 INDEX_BRUIDEGOM = 29
 INDEX_BRUIDEGOM_VADER = 47
@@ -25,7 +21,7 @@ ROLLEN = {
 }
 
 
-def clean(value: str):
+def opschonen(value: str):
     value = str(value).replace("<NA>", "").strip()
     return value if value else None
 
@@ -88,7 +84,7 @@ def generate_persons_marriage():
 
         huwelijken.append([
             huwelijk[0],
-            datum_huwelijk,
+            *datum_huwelijk,
             huwelijk[INDEX_BRUIDEGOM],
             huwelijk[INDEX_BRUID],
         ])
@@ -104,7 +100,7 @@ def generate_persons_marriage():
             except Exception:
                 dag, maand, jaar = None, None, None
 
-            leeftijd = get_age(clean(huwelijk[index + 12]))
+            leeftijd = get_age(opschonen(huwelijk[index + 12]))
 
             if not jaar and leeftijd:
                 jaar = datum_huwelijk[0] - leeftijd
@@ -112,13 +108,13 @@ def generate_persons_marriage():
             persoon = [
                 huwelijk[index],                # uuid
                 rol,                            # Role
-                clean(huwelijk[index + 9]),     # Voornaam
-                clean(huwelijk[index + 10]),    # Tussenvoegsel
-                clean(huwelijk[index + 11]),    # Geslachtsnaam
+                opschonen(huwelijk[index + 9]),     # Voornaam
+                opschonen(huwelijk[index + 10]),    # Tussenvoegsel
+                opschonen(huwelijk[index + 11]),    # Geslachtsnaam
                 leeftijd,                       # Age
-                clean(huwelijk[index + 13]),    # Beroep
-                clean(huwelijk[index + 16]),    # Woonplaats
-                clean(huwelijk[index + 14]),    # Geboorte plaats
+                opschonen(huwelijk[index + 13]),    # Beroep
+                opschonen(huwelijk[index + 16]),    # Woonplaats
+                opschonen(huwelijk[index + 14]),    # Geboorte plaats
                 jaar, maand, dag,               # Geboorte datum
             ]
             personen.append(persoon)
@@ -163,7 +159,7 @@ def generate_persons_marriage():
         orient="row",
         schema=[
             "uuid",
-            "datum",
+            "jaar", "maand", "dag",
             "bruidegom-uuid",
             "bruid-uuid",
         ]
