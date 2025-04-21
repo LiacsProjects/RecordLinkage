@@ -17,6 +17,12 @@ ROLLEN = {
     "Moeder": INDEX_MOEDER,
 }
 
+GESLACHT = {
+    "Kind": None,
+    "Vader": "m",
+    "Moeder": "v",
+}
+
 
 def opschonen(value: str):
     value = str(value).replace("<NA>", "").strip()
@@ -28,7 +34,7 @@ def get_date(datum: str) -> tuple[int, int, int]:
     def keep_numeric(text: str):
         return int("".join([ch for ch in text if ch.isnumeric()]))
 
-    date_list = datum.split("-")
+    date_list = datum.replace("!", "1").split("-")
     if datum[2] == "-":
         index_day, index_month, index_year = 0, 1, 2
     else:
@@ -38,11 +44,11 @@ def get_date(datum: str) -> tuple[int, int, int]:
     maand = keep_numeric(date_list[index_month])
     jaar = keep_numeric(date_list[index_year])
 
-    if dag < 0 or dag > 31:
+    if dag < 1 or dag > 31:
         dag = None
-    if maand < 0 or maand > 12:
+    if maand < 1 or maand > 12:
         maand = None
-    if jaar < 1700 or jaar > 1999:
+    if jaar < 1500 or jaar > 1999:
         jaar = None
     return jaar, maand, dag
 
@@ -102,10 +108,20 @@ def verwerk_geboorten():
                 aantal_missende_geb[rol] += 1
                 jaar, maand, dag = None, None, None
 
-            leeftijd = get_age(opschonen(geboorte[index + 17]))
+            if jaar:
+                leeftijd = datum_geboorte[0] - jaar
+                leeftijd_veld = get_age(opschonen(geboorte[index + 17]))
 
-            if not jaar and leeftijd:
-                jaar = datum_geboorte[0] - leeftijd
+                if leeftijd_veld:
+                    if (
+                        leeftijd > leeftijd_veld - 1
+                        and leeftijd < leeftijd_veld + 1
+                    ):
+                        leeftijd = leeftijd_veld
+            else:
+                leeftijd = get_age(opschonen(geboorte[index + 17]))
+                if leeftijd:
+                    jaar = datum_geboorte[0] - leeftijd
 
             persoon = [
                 geboorte[index],                    # uuid
@@ -114,6 +130,7 @@ def verwerk_geboorten():
                 opschonen(geboorte[index + 10]),    # Tussenvoegsel
                 opschonen(geboorte[index + 11]),    # Geslachtsnaam
                 leeftijd,                           # Leeftijd
+                GESLACHT[rol],                      # Geslacht
                 opschonen(geboorte[index + 16]),    # Beroep
                 opschonen(geboorte[index + 12]),    # Woonplaats
                 opschonen(geboorte[index + 13]),    # Geboorte plaats
@@ -169,6 +186,7 @@ def verwerk_geboorten():
             "tussenvoegsel",
             "geslachtsnaam",
             "leeftijd",
+            "geslacht",
             "beroep",
             "woonplaats",
             "geboorteplaats",
