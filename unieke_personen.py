@@ -40,7 +40,7 @@ def vind_verbonen_knopen(randen: list[tuple]):
 
 def haal_op_randen():
     randen = []
-    with open("links.txt", "r") as links:
+    with open("data\\resultaat\\links.csv", "r") as links:
         for link in links:
             randen.append(tuple(link.strip().split(";")))
     return randen
