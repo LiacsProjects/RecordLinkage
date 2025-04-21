@@ -62,23 +62,23 @@ def main():
 
             selectie = (
                 (pl.col("geslacht") == persoon[6] if persoon[6] else True)
-                & (pl.col("geboortejaar") == persoon[10])  # if persoon[10] else (True)
-                & (pl.col("geboortedag") == persoon[12])  # if persoon[6] else (True)
-                & (pl.col("geboortemaand") == persoon[11])  # if persoon[6] else (True)
+                & (pl.col("geboortejaar") == persoon[10])
+                & (pl.col("geboortedag") == persoon[12])
+                & (pl.col("geboortemaand") == persoon[11])
             )
 
         elif persoon[10] and persoon[11]:
             type_filter["maand"] += 1
             selectie = (
                 (pl.col("geslacht") == persoon[6] if persoon[6] else True)
-                & (pl.col("geboortejaar") == persoon[10])  # if persoon[10] else (True)
-                & (pl.col("geboortemaand") == persoon[11])  # if persoon[6] else (True)
+                & (pl.col("geboortejaar") == persoon[10])
+                & (pl.col("geboortemaand") == persoon[11])
             )
         elif persoon[10]:
             type_filter["jaar"] += 1
             selectie = (
                 (pl.col("geslacht") == persoon[6] if persoon[6] else True)
-                & (pl.col("geboortejaar") == persoon[10])  # if persoon[10] else (True)
+                & (pl.col("geboortejaar") == persoon[10])
             )
         else:
             type_filter["overig"] += 1
